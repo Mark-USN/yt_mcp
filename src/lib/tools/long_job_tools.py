@@ -6,9 +6,9 @@ from typing import TypeVar, Optional, Dict
 # from pathlib import Path
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
-from modules.utils.jobs import JobState, _JOBS, jk, sweep_jobs 
-from modules.utils.tokens import issue_token, requires_token, retrieve_sid, default_ttl
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.jobs import JobState, _JOBS, jk, sweep_jobs 
+from lib.utils.tokens import issue_token, requires_token, retrieve_sid, default_ttl
+from lib.utils.log_utils import get_logger # , log_tree
 
 T = TypeVar("T", bound=FastMCP)
 

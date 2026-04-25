@@ -14,9 +14,11 @@ dependencies = [
     "python-frontmatter>=1.1.0",
     "torch>=2.9.1",
     "torchvision>=0.24.1",
+    "yt_lib @ git+https://github.com/Mark-USN/yt_lib.git",
     "youtube-transcript-api>=1.2.3",
     "yt-dlp>=2025.10.22",
 ]
+[tool.uv.sources]
 
 # Tell uv about the PyTorch CUDA 12.8 index
 [[tool.uv.index]]
@@ -32,3 +34,9 @@ torch = [
 torchvision = [
     { index = "pytorch-cu128" },
 ]
+yt-lib = [
+#     { path = "C:/Users/mhenw/Source/repos/Mark-USN/yt_lib" },
+
+    { git = "https://github.com/Mark-USN/yt_lib.git", rev = "main" },
+]
+

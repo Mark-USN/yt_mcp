@@ -1,4 +1,4 @@
-# src/modules/utils/log_utils.py
+# src/lib/utils/log_utils.py
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
@@ -198,7 +198,7 @@ def format_tree(
             return s if len(s) <= max_str else f"{s[: max_str - 1]} "
         try:
             r = repr(v)
-        except Exception as e:  # noqa: BLE001 (best-effort for logging)
+        except Exception as e:  # pylint: disable=broad-exception-caught
             r = f"<repr failed: {type(e).__name__}: {e}>"
         return r if len(r) <= max_str else f"{r[: max_str - 1]} "
 
@@ -257,7 +257,7 @@ def format_tree(
         if callable(model_dump):
             try:
                 return model_dump()
-            except Exception:
+            except Exception:       # pylint: disable=broad-exception-caught
                 pass
 
         # Pydantic v1 models (or other .dict()-style)
@@ -265,14 +265,14 @@ def format_tree(
         if callable(as_dict):
             try:
                 return as_dict()
-            except Exception:
+            except Exception:       # pylint: disable=broad-exception-caught
                 pass
 
         # dataclasses
         if is_dataclass(v):
             try:
                 return asdict(v)
-            except Exception:
+            except Exception:       # pylint: disable=broad-exception-caught
                 pass
 
         # namedtuple-ish
@@ -280,7 +280,7 @@ def format_tree(
         if callable(_asdict):
             try:
                 return _asdict()
-            except Exception:
+            except Exception:       # pylint: disable=broad-exception-caught
                 pass
 
         # plain objects with attributes (may fail for slots-only objects)
@@ -316,7 +316,7 @@ def format_tree(
             if sort_dict_keys:
                 try:
                     keys.sort()
-                except Exception:  # noqa: BLE001
+                except Exception:  # pylint: disable=broad-exception-caught
                     pass
 
             shown = 0
@@ -407,21 +407,21 @@ class _ContextFormatter(logging.Formatter):
 def _safe_value(v: object) -> str:
     try:
         s = str(v)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:  # pylint: disable=broad-exception-caught
         return f"<str failed: {type(e).__name__}: {e}>"
     return s.replace("\n", "\\n")
 
 
 def _normalize_name(name: str, *, root: str) -> str:
-    # Common case: name is __name__ like "src.modules.youtube.search"
-    # You may want to map "src.modules." away; keep it simple and predictable.
+    # Common case: name is __name__ like "src.lib.youtube.search"
+    # You may want to map "src.lib." away; keep it simple and predictable.
     if name == "__main__":
         base = root
     else:
         base = name
 
     # Optional cleanup: if you run from src/, you might get "src.<...>"
-    base = base.removeprefix("src.").removeprefix("modules.")
+    base = base.removeprefix("src.").removeprefix("lib.")
 
     if base.startswith(root + ".") or base == root:
         return base
@@ -431,5 +431,5 @@ def _normalize_name(name: str, *, root: str) -> str:
 def _parse_level(level: str) -> int:
     try:
         return logging._nameToLevel[level]  # noqa: SLF001 (fine here; stable mapping)
-    except Exception:  # noqa: BLE001
+    except Exception:  # pylint: disable=broad-exception-caught
         return logging.INFO

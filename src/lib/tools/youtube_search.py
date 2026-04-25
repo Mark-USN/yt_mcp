@@ -35,13 +35,13 @@ from pydantic import Field
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from fastmcp import FastMCP
-from modules.utils.youtube_ids import (
+from lib.utils.youtube_ids import (
         extract_video_id,
         is_playlist_id,
         extract_playlist_id
     )
-from modules.utils.api_keys import api_vault
-from modules.utils.log_utils import get_logger, log_tree
+from lib.utils.api_keys import api_vault
+from lib.utils.log_utils import get_logger, log_tree
 logger = get_logger(__name__)
 
 # A small, process-wide throttle to avoid overwhelming upstream services when a
@@ -137,7 +137,7 @@ def yt_execute(req, *, label: str = "") -> dict[str, Any]:
                     redact_keys={"token", "api_key"},
                 )
             return resp
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         logger.warning("⚠️ %s failed with %s", getattr(req, "method", ""), exc)
         return {}
 
@@ -242,7 +242,7 @@ def parse_iso8601_duration_to_seconds(dur: str) -> int:
 def _as_int(v: Any) -> int:
     try:
         return int(v)
-    except Exception:
+    except Exception:    #pylint: disable=broad-exception-caught   
         return 0
 
 
@@ -591,7 +591,7 @@ def youtube_search(
     yt_order = YtOrder.coerce(order)
     youtube = _get_youtube_client()
 
-    req = youtube.search().list(
+    req = youtube.search().list(        # pylint: disable=no-member
         part="id,snippet",
         q=query,
         type=sk_kinds.value,

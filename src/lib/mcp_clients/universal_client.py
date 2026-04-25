@@ -8,15 +8,15 @@ and exercises known workflows using safe, deterministic arguments.
 from __future__ import annotations
 
 import asyncio
-import json
+# import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from fastmcp import Client
-from modules.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
-from modules.utils.paths import resolve_cache_paths
+from lib.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
+from lib.utils.paths import resolve_cache_paths
 from .youtube_demo import run_youtube_demo
 
 logger = get_logger(__name__)
@@ -44,7 +44,10 @@ class UniversalClient(Client):
     - exercise known workflows when available
     """
 
-    yt_search: str = ""
+    yt_search: str = ( 
+        "English language tutorials about North American birds and their habitats."
+        " Don't include videos that are just recording of bird songs."
+    )
     MAX_SEARCH_RESULTS: int = 5
 
     tools_list: list[Any]
@@ -86,7 +89,7 @@ class UniversalClient(Client):
             log_tree(
                 logger,
                 logging.INFO,
-                f"ping",
+                "ping",
                 result,
                 collapse_keys={"env"},  # env can be huge/noisy
                 redact_keys={"token", "api_key"},
@@ -172,7 +175,7 @@ class UniversalClient(Client):
 
 
 def main() -> None:
-    # from modules.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
+    # from lib.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
 
     configure_logging(LogConfig(level="INFO"))
     asyncio.run(UniversalClient("127.0.0.1", 8085).run())

@@ -2,7 +2,7 @@ import asyncio
 # import logging
 import random
 import time
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 
 logger = get_logger(__name__)
@@ -91,7 +91,7 @@ class JobClientMixin:
                 if args.get("token") is None:
                     return await self.call_tool(tool_name, args)
                 return await self.call_long_tool_and_get_result(tool_name, args)
-            except Exception as e:
+            except Exception as e:      # pylint: disable=broad-exception-caught    
                 msg = str(e).lower()
                 transient = any(k in msg for k in ["429", "too many requests", "blocked", "requestblocked", "rate"])
                 if (not transient) or (attempt >= max_retries):

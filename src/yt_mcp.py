@@ -1,4 +1,4 @@
-﻿""" 20251010 MMH model_context_protocol.py
+""" 20251010 MMH model_context_protocol.py
     A driver program to start/stop a detached MCP server or run a client. 
 
     USAGE: model_context_protocol.py --mode server|client|stop-server, 
@@ -20,11 +20,17 @@ import asyncio
 import subprocess
 import signal
 import logging
+from yt_lib.utils.log_utils import get_logger
+from yt_lib.yt_ids import YoutubeIdKind, extract_video_id
+from yt_lib.yt_search import youtube_search, extract_video_id
+from yt_lib.yt_transcript import youtube_json
+from yt_lib.yt_audio_transcript import youtube_audio_json
+
 from pathlib import Path
-from modules.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
-from modules.utils.paths import resolve_cache_paths
-from modules.mcp_servers import demo_server, long_job_server
-from modules.mcp_clients.universal_client import UniversalClient
+from lib.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
+from lib.utils.paths import resolve_cache_paths
+from lib.mcp_servers import demo_server, long_job_server
+from lib.mcp_clients.universal_client import UniversalClient
 
 # -----------------------------
 # Logging setup
@@ -87,7 +93,7 @@ def start_server(host: str, port: int, debug: bool, mode:str):
     # when the parent exits.
 
     # Command line to run the server module
-    cmd_str = ("modules.mcp_servers.demo_server" if mode == "server" else "modules.mcp_servers.long_job_server")
+    cmd_str = ("lib.mcp_servers.demo_server" if mode == "server" else "lib.mcp_servers.long_job_server")
     
 
     cmd = [

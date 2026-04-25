@@ -1,5 +1,5 @@
 ﻿"""
-src/modules/utils/paths.py
+src/lib/utils/paths.py
 
 Project path helpers for a repo layout like:
 
@@ -101,7 +101,7 @@ def get_module_path(*, start: Path) -> CachePaths:
     """Resolve Module directory.
 
     Resolution order:
-      Find the projects base path and add src/modules to it..
+      Find the projects base path and add src/lib to it..
 
     Args:
         start: A path under the project's src tree (typically Path(__file__)).
@@ -109,4 +109,4 @@ def get_module_path(*, start: Path) -> CachePaths:
     Returns:
         A Path object pointing to the project's module path.
     """
-    return project_root_from_src(start) / "src" / "modules"
+    return project_root_from_src(start) / "src" / "lib"

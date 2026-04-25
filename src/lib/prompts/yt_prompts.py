@@ -7,7 +7,7 @@ from typing import TypeVar
 from fastmcp import FastMCP
 from fastmcp.prompts.prompt import Message, PromptResult # ,PromptMessage, TextContent
 from pydantic import Field
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 
 T = TypeVar("T", bound=FastMCP)

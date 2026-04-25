@@ -9,7 +9,7 @@ import inspect
 # import logging
 from functools import wraps
 from typing import Any, Callable, TypeVar
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 # from pathlib import Path
 # from contextlib import contextmanager

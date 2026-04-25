@@ -1,7 +1,7 @@
-﻿# infra/long_tool_loader.py
+# infra/tool_loader.py
 """
 Dynamic discovery and registration of MCP tools.
-This loader automatically scans a package for modules (.py files),
+This loader automatically scans a package for lib (.py files),
 imports them safely, and registers them into an MCP server.
 """
 
@@ -15,7 +15,8 @@ from types import ModuleType
 from typing import List, TypeVar
 from pathlib import Path
 from fastmcp import FastMCP
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
+
 
 T = TypeVar("T", bound=FastMCP)
 
@@ -25,9 +26,9 @@ T = TypeVar("T", bound=FastMCP)
 logger = get_logger(__name__)
 
 # _REL_PATH = Path(__file__).parents[1].resolve()
-# modules/utils/tool_loader.py
+# lib/utils/tool_loader.py
 _REL_PATH = Path(__file__).parents[2].resolve()
-# parents[2] = .../ (the folder that has 'modules' in it)
+# parents[2] = .../ (the folder that has 'lib' in it)
 
 def load_module_from_path(
     path: str | Path,
@@ -108,12 +109,12 @@ def load_module_from_path(
 
 def discover_tools(package: str = ".tools") -> List[ModuleType]:
     """
-    Discover all *_tool modules inside the given package.
+    Discover all *_tool lib inside the given package.
     Args:
-        package (str): Python package path containing the tool modules.
+        package (str): Python package path containing the tool lib.
 
     Returns:
-        List[ModuleType]: A list of successfully imported modules.
+        List[ModuleType]: A list of successfully imported lib.
     """
     try:
         pkg = importlib.import_module(package)
@@ -133,28 +134,28 @@ def discover_tools(package: str = ".tools") -> List[ModuleType]:
         try:
             module = importlib.import_module(full_name)
             modules.append(module)
-            logger.info("✅ Loaded tool module: %s", full_name)
+            logger.info("✅ Loaded tool lib: %s", full_name)
         except Exception as e:      # pylint: disable=broad-exception-caught
-            logger.exception("❌ Error importing module %s: %s", full_name, e)
+            logger.exception("❌ Error importing lib %s: %s", full_name, e)
             continue
 
     return modules
 
 
-def register_long_tools_in_module(mcp: T, module: ModuleType) -> None:
+def register_tools_in_module(mcp: T, module: ModuleType) -> None:
     """
-    Register all long tools from a specific module.
+    Register all tools from a specific module.
 
     Args:
         mcp (Any): The MCP server instance.
         module (ModuleType): The module containing a register(mcp) method.
     """
-    if not hasattr(module, "register_long"):
-        logger.warning("⚠️ Module %s has no register_long(mcp) function", module.__name__)
+    if not hasattr(module, "register"):
+        logger.warning("⚠️ Module %s has no register(mcp) function", module.__name__)
         return
 
-    module.register_long(mcp)
-    logger.info("🔧 Registered long tools from %s", module.__name__)
+    module.register(mcp)
+    logger.info("🔧 Registered tools from %s", module.__name__)
 
     #=================================================
     #
@@ -162,13 +163,13 @@ def register_long_tools_in_module(mcp: T, module: ModuleType) -> None:
     #
     #=================================================
 
-def register_long_tools(mcp: T, package: Path | str = "../tools") -> None:
+def register_tools(mcp: T, package: Path | str = "../tools") -> None:
     """
-    Register all discovered long tool modules with the MCP server.
+    Register all discovered tool lib with the MCP server.
 
     Args:
         mcp (Any): The MCP server instance.
-        package (str): Package path to scan for tool modules.
+        package (str): Package path to scan for tool lib.
     """
     if isinstance(package, Path):
         tools_pkg = package
@@ -189,11 +190,9 @@ def register_long_tools(mcp: T, package: Path | str = "../tools") -> None:
 
     modules = discover_tools(module_name)
     if not modules:
-        logger.warning("⚠️ No long tool modules found in package '%s'", package)
+        logger.warning("⚠️ No tool lib found in package '%s'", package)
 
     for module in modules:
-        register_long_tools_in_module(mcp, module)
-
-
+        register_tools_in_module(mcp, module)
 
 

@@ -8,13 +8,13 @@ from functools import wraps
 from typing import Any, Callable, Dict, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-from modules.utils.tokens import verify_token
+from lib.utils.tokens import verify_token
 # from mcp.types import CallToolResult, TextContent  # if you have the official mcp package
 # OR, if you intend to use your generated bindings file, import from wherever types.py lives:
-# from modules.utils.types import CallToolResult, TextContent
+# from lib.utils.types import CallToolResult, TextContent
 
 from fastmcp import FastMCP
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 # import base64
 # import argparse
@@ -117,14 +117,14 @@ async def _run_with_timeout(job: Job, coro: asyncio.coroutines):
         job.error_type = "CancelledError"
         raise
 
-    except Exception as e:
+    except Exception as e:      # pylint: disable=broad-exception-caught
         job.state = JobState.FAILED
         job.error = str(e)
         job.error_type = type(e).__name__
         try:
             import traceback as _tb
             job.traceback = _tb.format_exc()
-        except Exception:
+        except Exception:       # pylint: disable=broad-exception-caught
             # best-effort only
             job.traceback = None
 

@@ -14,17 +14,17 @@ import logging
 import time
 from datetime import timedelta
 from typing import Any
-# from modules.utils.paths import resolve_cache_paths
-from modules.utils.youtube_ids import extract_video_id, extract_playlist_id
+# from lib.utils.paths import resolve_cache_paths
+from lib.utils.youtube_ids import extract_video_id, extract_playlist_id
 # from urllib.parse import parse_qs, urlparse
-from modules.utils.log_utils import get_logger, log_tree
+from lib.utils.log_utils import get_logger, log_tree
 from .ai_prompt import (
-    NormalizedQuery, 
-    mcp_messages_to_openai,
+    # NormalizedQuery, 
+    # mcp_messages_to_openai,
     prompt_result_messages_to_llm,
     normalize_youtube_query, 
     post_filter, 
-    LlmMessage
+    # LlmMessage
 )
 
 
@@ -135,10 +135,12 @@ async def exercise_youtube_search(client: Any) -> list[dict[str, Any]]:
         )
 
     res = await client.call_tool("youtube_search", yt_search_args)
-    call_title = 'youtube_search('
-    f'query: {yt_search_args["query"]}, '
-    f'order: {yt_search_args["order"]}, '
-    f'max_results: {yt_search_args["max_results"]})'
+    call_title = ( 
+        'youtube_search('
+        f'query: {yt_search_args["query"]}, '
+        f'order: {yt_search_args["order"]}, '
+        f'max_results: {yt_search_args["max_results"]})'
+    )
 
     log_tree(
         logger,

@@ -1,21 +1,21 @@
-# infra/tool_loader.py
+# prompt_loader.py
 """
-Dynamic discovery and registration of MCP tools.
-This loader automatically scans a package for modules (.py files),
-imports them safely, and registers them into an MCP server.
+Dynamic discovery and registration of MCP prompt lib.
+This loader automatically scans a package for lib, in the
+given directory, imports them safely, and registers them into an MCP server.
 """
 
 import sys
 import importlib
 import importlib.util
 import pkgutil
+
 import hashlib
-# import logging
 from types import ModuleType
-from typing import List, TypeVar
 from pathlib import Path
+from typing import List, TypeVar
 from fastmcp import FastMCP
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 
 T = TypeVar("T", bound=FastMCP)
@@ -25,10 +25,9 @@ T = TypeVar("T", bound=FastMCP)
 # -----------------------------
 logger = get_logger(__name__)
 
-# _REL_PATH = Path(__file__).parents[1].resolve()
-# modules/utils/tool_loader.py
-_REL_PATH = Path(__file__).parents[2].resolve()
-# parents[2] = .../ (the folder that has 'modules' in it)
+
+_REL_PATH = Path(__file__).parents[1].resolve()
+
 
 def load_module_from_path(
     path: str | Path,
@@ -61,7 +60,6 @@ def load_module_from_path(
         raise FileNotFoundError(p)
 
     def _name_from_root(pp: Path, root: Path) -> str:
-        """ Derive a dotted module name for `pp` relative to `root`. """
         rel = pp.relative_to(root)
         parts = list(rel.parts)
         if pp.is_file() and pp.suffix == ".py":
@@ -103,23 +101,24 @@ def load_module_from_path(
             sys.modules[module_name] = mod
             spec.loader.exec_module(mod)
             return mod, module_name
-
         raise ImportError(f"Unsupported path type: {p}")
 
 
-def discover_tools(package: str = ".tools") -> List[ModuleType]:
+
+def discover_prompts(package: str = ".prompts") -> List[ModuleType]:
     """
-    Discover all *_tool modules inside the given package.
+    Discover all libs inside the given package.
+
     Args:
-        package (str): Python package path containing the tool modules.
+        package (str): Python package path containing the prompt lib.
 
     Returns:
-        List[ModuleType]: A list of successfully imported modules.
+        List[ModuleType]: A list of successfully imported lib.
     """
     try:
         pkg = importlib.import_module(package)
     except ImportError as e:
-        logger.error("❌ Could not import tools package '%s': %s", package, e)
+        logger.error("❌ Could not import prompts package '%s': %s", package, e)
         return []
 
     modules: List[ModuleType] = []
@@ -129,22 +128,51 @@ def discover_tools(package: str = ".tools") -> List[ModuleType]:
         # into subpackages and 'flatten' them into the main package namespace.
         if ispkg :
             continue
-
         full_name = f"{package}.{modname}"
-        try:
-            module = importlib.import_module(full_name)
-            modules.append(module)
-            logger.info("✅ Loaded tool module: %s", full_name)
-        except Exception as e:      # pylint: disable=broad-exception-caught
-            logger.exception("❌ Error importing module %s: %s", full_name, e)
-            continue
+        module = importlib.import_module(full_name)
+        modules.append(module)
+        logger.info("✅ Loaded prompt module: %s", full_name)
 
     return modules
 
 
-def register_tools_in_module(mcp: T, module: ModuleType) -> None:
+def register_prompts(mcp: T, prompts_dir: Path | str = "..prompts") -> None:
     """
-    Register all tools from a specific module.
+    Register all discovered prompt modules with the MCP server.
+
+    Args:
+        mcp (Any): The MCP server instance.
+        package (str): Package path to scan for prompt modules.
+    """
+
+    if isinstance(prompts_dir, Path):
+        prompts_pkg = prompts_dir
+    else:
+        prompts_pkg = Path(prompts_dir)
+
+    if not prompts_pkg.exists() or not prompts_pkg.is_dir():
+        logger.exception("❌ Prompts directory %s does not exist or is not "
+                         "a directory.", prompts_pkg)
+        return
+
+    _, module_name = load_module_from_path(
+            path=prompts_pkg,
+            sys_path_root=_REL_PATH,
+            module_name="prompts",
+            add_sys_path=True
+            )
+
+    modules = discover_prompts(module_name)
+    if not modules:
+        logger.warning("⚠️ No prompt lib found in package '%s'", prompts_dir)
+
+    for module in modules:
+        register_prompts_in_module(mcp, module)
+
+
+def register_prompts_in_module(mcp: T, module: ModuleType) -> None:
+    """
+    Register all prompts from a specific module.
 
     Args:
         mcp (Any): The MCP server instance.
@@ -155,44 +183,4 @@ def register_tools_in_module(mcp: T, module: ModuleType) -> None:
         return
 
     module.register(mcp)
-    logger.info("🔧 Registered tools from %s", module.__name__)
-
-    #=================================================
-    #
-    # Entry Point called by MCP server
-    #
-    #=================================================
-
-def register_tools(mcp: T, package: Path | str = "../tools") -> None:
-    """
-    Register all discovered tool modules with the MCP server.
-
-    Args:
-        mcp (Any): The MCP server instance.
-        package (str): Package path to scan for tool modules.
-    """
-    if isinstance(package, Path):
-        tools_pkg = package
-    else:
-        tools_pkg = Path(package)
-
-    if not tools_pkg.exists() or not tools_pkg.is_dir():
-        logger.exception("❌ Prompts directory %s does not exist or is not a directory.", tools_pkg)
-        return
-
-    # _, module_name = load_module_from_path(path=tools_pkg, sys_path_root=_REL_PATH,
-    #                       module_name="tools", add_sys_path=True)
-    _, module_name = load_module_from_path(
-        path=tools_pkg,
-        sys_path_root=_REL_PATH,  # project root
-        add_sys_path=True,        # let the loader derive the dotted name
-    )
-
-    modules = discover_tools(module_name)
-    if not modules:
-        logger.warning("⚠️ No tool modules found in package '%s'", package)
-
-    for module in modules:
-        register_tools_in_module(mcp, module)
-
-
+    logger.info("🔧 Registered prompts from %s", module.__name__)

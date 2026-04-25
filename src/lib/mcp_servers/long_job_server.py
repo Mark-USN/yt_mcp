@@ -1,23 +1,19 @@
-﻿""" 20251101 MMH demo_server.py — FastMCP server that discovers 
-        tools/prompts/resources.
-    Based on https://gofastmcp.com/servers/server
-    Added code to automatically register tools and prompts from their packages.
-        from the 'tools' package,
-"""
-# TODO: 20251101 MMH Add resource_loader.py and resource_template_loader.py
-
+﻿""" MCP module: HMAC-authenticated long-running jobs with session isolation."""
+import time
 import argparse
 # import logging
-import time
 from pathlib import Path
+# from typing import Any, Callable, Dict, Optional, TypeVar
 from fastmcp import FastMCP
-from modules.utils.log_utils import LogConfig, configure_logging, get_logger # , log_tree
-from modules.utils.prompt_md_loader import register_prompts_from_markdown
-from modules.utils.prompt_loader import register_prompts
-from modules.utils.tool_loader import register_tools
-from modules.utils.paths import resolve_cache_paths, get_module_path
-# from modules.utils.long_tool_loader import register_long_tools
+from lib.utils.log_utils import LogConfig, configure_logging, get_logger # , log_tree
+from lib.utils.jobs import long_tools_require_token
+from lib.utils.prompt_md_loader import register_prompts_from_markdown
+from lib.utils.prompt_loader import register_prompts
+from lib.utils.tool_loader import register_tools
+from lib.utils.long_tool_loader import register_long_tools
+from lib.utils.paths import get_module_path, resolve_cache_paths
 
+# mcp = FastMCP(name="MCP-HMAC-LongJobs")
 
 # -----------------------------
 # Logging setup
@@ -41,13 +37,12 @@ def _get_cache_dir()->Path:
     cache_path.mkdir(parents=True, exist_ok=True)
     return cache_path
 
-
-
 # -----------------------------
-# Server instance & conventions
+# From demo_server.py: Paths to tool, prompt, resource packages
 # -----------------------------
+
 mcp = FastMCP(
-    name="DemoServer",
+    name="LongJobServer",
     include_tags={"public", "api"},
     exclude_tags={"internal", "deprecated"},
     on_duplicate_tools="error",
@@ -88,6 +83,9 @@ def purge_server_cache(days: int = 1) -> None:
                 f.unlink(missing_ok=True)
 
 
+
+
+
 # -----------------------------------------
 # Attach everything to FastMCP at startup
 # -----------------------------------------
@@ -97,69 +95,55 @@ def attach_everything():
         Any error in a file will cause the tools or prompts in that package to be ignored.
         Make sure you trust the code in those packages!
     """
-
     # Purge old cache files on server startup
     purge_server_cache(days=1)
 
+    # Regular tools behave exactly like demo_server
     register_tools(mcp, package=_get_tools_dir())
-    logger.info("✅	 Tools registered.")
+    logger.info("✅\t Tools registered.")
 
-    # register_long_tools(mcp, package=_TOOLS_DIR)
-    # logger.info("✅	 Long tools registered.")
+    # Long tools: only those registered via register_long_tools are wrapped as background jobs
+    with long_tools_require_token(mcp):
+        register_long_tools(mcp, package=_get_tools_dir())
+    logger.info("✅\t Long tools registered (launch as jobs; token required).")
 
     register_prompts_from_markdown(mcp, prompts_dir=_get_prompts_dir())
-    logger.info("✅	 Markdown files parsed and prompts registered.")
+    logger.info("✅\t Prompts from markdown registered.")
 
     register_prompts(mcp, prompts_dir=_get_prompts_dir())
-    logger.info("✅	 Prompt functions registered.")
+    logger.info("✅\t Prompts registered.")
+
 
 def launch_server(host:str="127.0.0.1", port:int=8085):
     """ 20251101 MMH launch_server
         The entry point to start the FastMCP server. 
         Launch the FastMCP server with all tools and prompts attached. 
     """
-    logger.info("✅ demo_server started.")
+
+    logger.info("✅ long_job_server started.")
     attach_everything()
     mcp.run(transport="http", host=host, port=port)
-    logger.info("✅	 Demo Server started on http://{host}:{port}")
+    logger.info("✅	 Long Job Server started on http://{host}:{port}")
 
-
-# -----------------------------
-# CLI (kept as before)
-# -----------------------------
-def port_type(value: str) -> int:
-    """ 20251101 MMH port_type
-        Custom argparse type that validates a TCP port number.
-    """
-    try:
-        port = int(value)
-    except ValueError as e:
-        raise argparse.ArgumentTypeError(f"Port must be an integer (got {value!r})") from e
-    if not 1 <= port <= 65535:
-        raise argparse.ArgumentTypeError(f"Port number must be between 1 and 65535 (got {port})")
-    return port
 
 def main():
-    """ 20251101 MMH main
-        Main entry point when launched "stand alone" 
-        Parse arguments and start the server. 
-    """
-
-    parser = argparse.ArgumentParser(description="Create and run an MCP server.")
-    parser.add_argument("--host", type=str, default="127.0.0.1",
-                        help="Host name or IP address (default 127.0.0.1).")
-    parser.add_argument("--port", type=port_type, default=8085,
-                        help="TCP port to bind/connect (default 8085).")
+    parser = argparse.ArgumentParser(description="MCP long-job server")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8085)
     args = parser.parse_args()
 
-    launch_server(args.host, args.port)
+    host = args.host
+    port = args.port
+
+    logger.info("✅ long_job_server started.")
+    attach_everything()
+    mcp.run(transport="http", host=host, port=port)
+    logger.info("✅\t Server started on http://{host}:{port}")
+
 
 if __name__ == "__main__":
     # -----------------------------
     # Logging setup
     # -----------------------------
     configure_logging(LogConfig(level="INFO"))
-    
-
-
     main()

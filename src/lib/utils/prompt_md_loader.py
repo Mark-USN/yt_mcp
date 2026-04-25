@@ -11,7 +11,7 @@ import frontmatter  # pip/uv: python-frontmatter
 from pathlib import Path
 from typing import Any, TypeVar
 from fastmcp import FastMCP
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 T = TypeVar("T", bound=FastMCP)
 
@@ -160,7 +160,7 @@ def _make_dynamic_prompt_fn(name: str, prompt_body: str, params: dict[str, dict]
     arglist = ", ".join(parts) if parts else ""
 
     # Build the function body code
-    code = f"""
+    code = (f"""
 def {name}({arglist}):
     values = locals()
     try:
@@ -168,12 +168,12 @@ def {name}({arglist}):
     except KeyError as e:
         raise ValueError(f"Missing value for template placeholder: {{e}}")
 """
-
+    )
     # Prepare namespace
     ns = {}
 
     # Execute the function definition
-    exec(textwrap.dedent(code), ns)
+    exec(textwrap.dedent(code), ns)     # pylint: disable=exec-used
 
     # Extract the function object
     return ns[name]

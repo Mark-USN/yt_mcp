@@ -16,10 +16,10 @@ from youtube_transcript_api import FetchedTranscript
 from dataclasses import dataclass
 from collections.abc import Callable
 from fastmcp import FastMCP  # pylint: disable=unused-import
-from modules.utils.ffmpeg_bootstrap import ensure_ffmpeg_on_path, get_ffmpeg_binary_path
-from modules.utils.paths import resolve_cache_paths
-from modules.utils.youtube_ids import extract_video_id
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.ffmpeg_bootstrap import ensure_ffmpeg_on_path, get_ffmpeg_binary_path
+from lib.utils.paths import resolve_cache_paths
+from lib.utils.youtube_ids import extract_video_id
+from lib.utils.log_utils import get_logger # , log_tree
 
 # from youtube_transcript_api import YouTubeTranscriptApi, FetchedTranscript
 
@@ -265,7 +265,7 @@ def fetch_audio_transcript(
                 os.utime(cache_path, (now, now))
             return transcript
 
-        except Exception as exc:  # pragma: no cover - cache read is best-effort
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning(
                 "⚠️ Failed to load cached transcript %s: %s; recomputing.",
                 cache_path,
@@ -302,7 +302,7 @@ def fetch_audio_transcript(
             with cache_path.open("w", encoding="utf-8") as f:
                 json.dump(chunks, f, ensure_ascii=False, indent=2)
             logger.info("💾 Saved Whisper transcript cache to %s", cache_path)
-        except Exception as exc:  # pragma: no cover - cache write is best-effort
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning(
                 "⚠️ Failed to write transcript cache %s: %s",
                 cache_path,
@@ -593,7 +593,7 @@ async def fetch_audio_transcript_async(
             if progress_cb:
                 progress_cb(1.0, "finished")
             return transcript
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning("⚠️ Failed to load cached transcript %s: %s; recomputing.", cache_path, exc)
 
     # Ensure ffmpeg on PATH
@@ -637,7 +637,7 @@ async def fetch_audio_transcript_async(
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(chunks, f, ensure_ascii=False, indent=2)
             logger.info("💾 Saved Whisper transcript cache to %s", cache_path)
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning("⚠️ Failed to write transcript cache %s: %s", cache_path, exc)
     if progress_cb:
         progress_cb(1.0, "finished")

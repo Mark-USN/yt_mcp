@@ -1,7 +1,7 @@
 # resource_loader.py
 """
 Dynamic discovery and registration of MCP resource.
-This loader automatically scans a package for *_tool modules,
+This loader automatically scans a package for *_tool lib,
 imports them safely, and registers them into an MCP server.
 """
 
@@ -14,7 +14,7 @@ from typing import Any, List, TypeVar
 from pathlib import Path
 import frontmatter
 from fastmcp import FastMCP
-from modules.utils.log_utils import get_logger # , log_tree
+from lib.utils.log_utils import get_logger # , log_tree
 
 T = TypeVar("T", bound=FastMCP)
 
@@ -60,13 +60,13 @@ def discover_resources(resources_dir: Path) -> None: # = default_resource_path) 
 
 def discover_resource(package: Path = default_resource_path) -> List[ModuleType]:
     """
-    Discover all *_tool modules inside the given package.
+    Discover all *_tool libs inside the given package.
 
     Args:
-        package (str): Python package path containing the tool modules.
+        package (str): Python package path containing the tool lib.
 
     Returns:
-        List[ModuleType]: A list of successfully imported modules.
+        List[ModuleType]: A list of successfully imported lib.
     """
     try:
         pkg = importlib.import_module(package)
@@ -88,9 +88,9 @@ def discover_resource(package: Path = default_resource_path) -> List[ModuleType]
         try:
             module = importlib.import_module(full_name)
             modules.append(module)
-            logger.info("✅ Loaded tool module: %s", full_name)
+            logger.info("✅ Loaded tool lib: %s", full_name)
         except Exception as e:      # pylint: disable=broad-exception-caught
-            logger.exception("❌ Error importing module %s: %s", full_name, e)
+            logger.exception("❌ Error importing lib %s: %s", full_name, e)
             continue
 
     return modules
@@ -98,15 +98,15 @@ def discover_resource(package: Path = default_resource_path) -> List[ModuleType]
 
 def register_resource(mcp: T, package: str = "mcp_servers.resource") -> None:
     """
-    Register all discovered tool modules with the MCP server.
+    Register all discovered tool libs with the MCP server.
 
     Args:
         mcp (Any): The MCP server instance.
-        package (str): Package path to scan for tool modules.
+        package (str): Package path to scan for tool libs.
     """
     modules = discover_resource(package)
     if not modules:
-        logger.warning("⚠️ No tool modules found in package '%s'", package)
+        logger.warning("⚠️ No resource libs found in package '%s'", package)
 
     for module in modules:
         register_resource_in_module(mcp, module)

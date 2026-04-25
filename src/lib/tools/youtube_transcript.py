@@ -31,10 +31,9 @@ import time
 from contextlib import contextmanager
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar
 # from urllib.parse import parse_qs, urlparse
-from modules.utils.log_utils import get_logger
-
+from lib.utils.log_utils import get_logger
 from youtube_transcript_api import (
     FetchedTranscript,
     NoTranscriptFound,
@@ -44,8 +43,8 @@ from youtube_transcript_api import (
     YouTubeTranscriptApi,
 )
 from fastmcp import FastMCP  # pylint: disable=unused-import
-from modules.utils.paths import resolve_cache_paths
-from modules.utils.youtube_ids import extract_video_id
+from lib.utils.paths import resolve_cache_paths
+from lib.utils.youtube_ids import extract_video_id
 
 logger = get_logger(__name__)
 
@@ -99,10 +98,10 @@ def _file_lock(lock_path: Path):
                 fh.seek(0)
                 msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
             else:
-                import fcntl  # pylint: disable=import-outside-toplevel
+                import fcntl  # pylint: disable= import-error, import-outside-toplevel
 
                 fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.debug("⚠️ Cache lock unavailable (%s): %s", lock_path, exc)
 
         yield
@@ -114,10 +113,10 @@ def _file_lock(lock_path: Path):
                 fh.seek(0)
                 msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
             else:
-                import fcntl  # pylint: disable=import-outside-toplevel
+                import fcntl  # pylint: disable= import-error, import-outside-toplevel
 
                 fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
-        except Exception:  # pragma: no cover
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
         fh.close()
 
@@ -225,7 +224,7 @@ def fetch_transcript(
                     cache_path.touch()
                     logger.info("✅ Using cached transcript for %s", video_id)
                     return cached  # type: ignore[return-value]
-            except (OSError, json.JSONDecodeError) as exc:  # pragma: no cover
+            except (OSError, json.JSONDecodeError) as exc:  # pylint: disable=broad-exception-caught
                 logger.warning(
                     "⚠️ Failed to load cached transcript %s: %s; recomputing.",
                     cache_path,
@@ -250,7 +249,7 @@ def fetch_transcript(
             # Preferred languages unavailable; we may still be able to fetch some other
             # language or translate.
             pass
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning("⚠️ Transcript fetch failed for %s: %s", video_id, exc)
             return None
 
@@ -261,7 +260,7 @@ def fetch_transcript(
         except (TranscriptsDisabled, NoTranscriptFound) as exc:
             logger.info("✅ No transcripts for %s: %s", video_id, exc)
             return None
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning("⚠️ Transcript list failed for %s: %s", video_id, exc)
             return None
 
@@ -269,7 +268,7 @@ def fetch_transcript(
         try:
             available_langs = [getattr(tr, "language_code", "?") for tr in transcript_list]
             logger.debug("✅ Available languages for %s: %s", video_id, available_langs)
-        except Exception:  # pragma: no cover
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
         first_tr = next(iter(transcript_list), None)
@@ -290,41 +289,54 @@ def fetch_transcript(
             )
             with _FETCH_SEM:
                 fetched = first_tr.fetch(preserve_formatting=True)
-        except Exception as exc:  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning("⚠️ Transcript fallback fetch failed for %s: %s", video_id, exc)
             return None
 
         return transcript_to_list_and_cache(fetched, cache_path)
 
 
+TranscriptSnippet = dict[str, Any]
+_END_PUNCT = (".", "?", "!", "…")
+
 def json_to_paragraphs(
     transcript_list: Sequence[TranscriptSnippet],
     *,
-    gap_s: float = 1.5,
+    hard_gap_s: float = 1.8,   # section breaks (works well on your sample)
+    soft_gap_s: float = 1.0,   # smaller break if the previous ends like a sentence
+    max_words: int = 65,       # backstop for readability
 ) -> str:
-    """Convert raw transcript snippets into paragraph text.
-
-    A new paragraph is started when the gap between the end of one snippet and
-    the start of the next exceeds `gap_s`.
-    """
     paragraphs: list[list[str]] = []
     current: list[str] = []
-    last_end: float | None = None
+    last_start: float | None = None
+    words_in_current = 0
 
     for snip in transcript_list:
-        text = snip.get("text", "").strip()
+        text = str(snip.get("text", "")).strip()
         if not text:
             continue
 
-        start = snip.get("start", 0.0)
-        duration = snip.get("duration", 0.0)
+        start = float(snip.get("start", 0.0))
+        gap = (start - last_start) if last_start is not None else 0.0
 
-        if last_end is not None and start - last_end > gap_s:
-            paragraphs.append(current)
-            current = []
+        if current:
+            prev = current[-1]
+            prev_ends_sentence = prev.endswith(_END_PUNCT)
+
+            should_break = (
+                gap > hard_gap_s
+                or words_in_current >= max_words
+                or (prev_ends_sentence and gap > soft_gap_s)
+            )
+
+            if should_break:
+                paragraphs.append(current)
+                current = []
+                words_in_current = 0
 
         current.append(text)
-        last_end = start + duration
+        words_in_current += len(text.split())
+        last_start = start
 
     if current:
         paragraphs.append(current)
