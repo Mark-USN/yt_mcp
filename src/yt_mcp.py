@@ -19,38 +19,40 @@ import argparse
 import asyncio
 import subprocess
 import signal
-import logging
-from yt_lib.utils.log_utils import get_logger
+from pathlib import Path
+from yt_lib.utils.log_utils import LogConfig, FileLogConfig, configure_logging, get_logger 
+from yt_lib.utils.app_context import RuntimeContext, create_user_base_context
 from yt_lib.yt_ids import YoutubeIdKind, extract_video_id
 from yt_lib.yt_search import youtube_search, extract_video_id
 from yt_lib.yt_transcript import youtube_json
-from yt_lib.yt_audio_transcript import youtube_audio_json
 
-from pathlib import Path
-from lib.utils.log_utils import LogConfig, configure_logging, get_logger, log_tree
-from lib.utils.paths import resolve_cache_paths
-from lib.mcp_servers import demo_server, long_job_server
+from lib.mcp_servers import mcp_server
 from lib.mcp_clients.universal_client import UniversalClient
+
+ctx = RuntimeContext(
+    create_user_context(
+        app_name="yt_mcp",
+        app_author="HenCode",
+    )
+)
 
 # -----------------------------
 # Logging setup
 # -----------------------------
-
-# configure_logging(LogConfig(level="DEBUG"), force=True)
-configure_logging(LogConfig(level="INFO"))
+configure_logging(
+                LogConfig(level="INFO"),
+                force=True,
+                file=FileLogConfig(path=ctx.log_dir()),
+                tee_console=False,
+            )
 logger = get_logger(__name__)
 
-"""
-def handle(payload: dict[str, object]) -> None:
-    logger.info("Handling payload")
-    log_tree(logger, logging.DEBUG, "payload", payload, collapse_keys={"raw"})
-"""
 # -----------------------------
 # Paths (PID & LOG live next to this file)
 # -----------------------------
 
-svr_pid = resolve_cache_paths(app_name = "", start = Path(__file__)).base_cache_dir / "mcp.pid"
-svr_log = resolve_cache_paths(app_name = "", start = Path(__file__)).base_cache_dir / "mcp.log"
+svr_pid = ctx.cache_dir() / "mcp.pid"
+svr_log = ctx.log_dir() / "mcp_subprocess.log"
 
 
 # ---- Helper to find pythonw.exe on Windows ----
@@ -81,10 +83,7 @@ def start_server(host: str, port: int, debug: bool, mode:str):
 
     if debug:
         # Launch the server in the current process (foreground) for debugging.
-        if mode == "server":
-            demo_server.launch_server(host, port)
-        else:
-            long_job_server.launch_server(host, port)
+        mcp_server.launch_server(host, port)
         return
 
     # --- Detached mode ---
@@ -93,8 +92,7 @@ def start_server(host: str, port: int, debug: bool, mode:str):
     # when the parent exits.
 
     # Command line to run the server module
-    cmd_str = ("lib.mcp_servers.demo_server" if mode == "server" else "lib.mcp_servers.long_job_server")
-    
+    cmd_str = "lib.mcp_servers.mcp_server"
 
     cmd = [
         _pythonw_exe(),
@@ -115,12 +113,8 @@ def start_server(host: str, port: int, debug: bool, mode:str):
         kwargs["close_fds"] = True
     
     # 20251204 MMH: Ensure log file and pid file exist
-    if not svr_log.parent.exists():
-        svr_log.parent.mkdir(parents=True, exist_ok=True)
-        svr_log.touch(exist_ok=True)
-    if not svr_pid.parent.exists():
-        svr_pid.parent.mkdir(parents=True, exist_ok=True)
-        svr_pid.touch(exist_ok=True)
+    svr_log.parent.mkdir(parents=True, exist_ok=True)
+    svr_pid.parent.mkdir(parents=True, exist_ok=True)
 
     # Use `with` for the log file only; the server keeps running after this
     # script exits.
@@ -223,10 +217,10 @@ def main():
     )
 
     parser.add_argument("--mode",
-        choices=["server", "client", "stop-server","long-job-server"],
+        choices=["server", "client", "stop-server"],
         type=str.lower,
         required=True,
-        help="Run as server, long_job_server, client, or stop-server."
+        help="Run as server, client, or stop-server."
     )
 
     parser.add_argument("--host", type=str, default="127.0.0.1",

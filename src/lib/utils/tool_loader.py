@@ -4,18 +4,19 @@ Dynamic discovery and registration of MCP tools.
 This loader automatically scans a package for lib (.py files),
 imports them safely, and registers them into an MCP server.
 """
+from __future__ import annotations
 
 import sys
 import importlib
 import importlib.util
 import pkgutil
 import hashlib
-# import logging
 from types import ModuleType
 from typing import List, TypeVar
 from pathlib import Path
 from fastmcp import FastMCP
-from lib.utils.log_utils import get_logger # , log_tree
+from yt_lib.utils.log_utils import get_logger # , log_tree
+from yt_lib.utils.app_context import RunContextStore
 
 
 T = TypeVar("T", bound=FastMCP)
@@ -25,10 +26,7 @@ T = TypeVar("T", bound=FastMCP)
 # -----------------------------
 logger = get_logger(__name__)
 
-# _REL_PATH = Path(__file__).parents[1].resolve()
-# lib/utils/tool_loader.py
 _REL_PATH = Path(__file__).parents[2].resolve()
-# parents[2] = .../ (the folder that has 'lib' in it)
 
 def load_module_from_path(
     path: str | Path,
@@ -142,7 +140,7 @@ def discover_tools(package: str = ".tools") -> List[ModuleType]:
     return modules
 
 
-def register_tools_in_module(mcp: T, module: ModuleType) -> None:
+def register_tools_in_module(mcp: T, module: ModuleType, ctx: RunContextStore) -> None:
     """
     Register all tools from a specific module.
 
@@ -154,7 +152,7 @@ def register_tools_in_module(mcp: T, module: ModuleType) -> None:
         logger.warning("⚠️ Module %s has no register(mcp) function", module.__name__)
         return
 
-    module.register(mcp)
+    module.register(mcp, ctx)
     logger.info("🔧 Registered tools from %s", module.__name__)
 
     #=================================================
@@ -163,7 +161,7 @@ def register_tools_in_module(mcp: T, module: ModuleType) -> None:
     #
     #=================================================
 
-def register_tools(mcp: T, package: Path | str = "../tools") -> None:
+def register_tools(mcp: T, package_dir: Path | str = "../tools", ctx: RunContextStore = None) -> None:
     """
     Register all discovered tool lib with the MCP server.
 
@@ -171,10 +169,10 @@ def register_tools(mcp: T, package: Path | str = "../tools") -> None:
         mcp (Any): The MCP server instance.
         package (str): Package path to scan for tool lib.
     """
-    if isinstance(package, Path):
-        tools_pkg = package
+    if isinstance(package_dir, Path):
+        tools_pkg = package_dir
     else:
-        tools_pkg = Path(package)
+        tools_pkg = Path(package_dir)
 
     if not tools_pkg.exists() or not tools_pkg.is_dir():
         logger.exception("❌ Prompts directory %s does not exist or is not a directory.", tools_pkg)
@@ -193,6 +191,6 @@ def register_tools(mcp: T, package: Path | str = "../tools") -> None:
         logger.warning("⚠️ No tool lib found in package '%s'", package)
 
     for module in modules:
-        register_tools_in_module(mcp, module)
+        register_tools_in_module(mcp, module, ctx)
 
 

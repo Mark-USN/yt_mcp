@@ -1,21 +1,21 @@
-﻿""" 20251101 MMH demo_server.py — FastMCP server that discovers 
+""" 20251101 MMH demo_server.py — FastMCP server that discovers 
         tools/prompts/resources.
     Based on https://gofastmcp.com/servers/server
     Added code to automatically register tools and prompts from their packages.
         from the 'tools' package,
 """
 # TODO: 20251101 MMH Add resource_loader.py and resource_template_loader.py
+from __future__ import annotations
 
 import argparse
-# import logging
 import time
 from pathlib import Path
 from fastmcp import FastMCP
-from lib.utils.log_utils import LogConfig, configure_logging, get_logger # , log_tree
+from yt_lib.utils.log_utils import LogConfig, configure_logging, get_logger # , log_tree
 from lib.utils.prompt_md_loader import register_prompts_from_markdown
 from lib.utils.prompt_loader import register_prompts
 from lib.utils.tool_loader import register_tools
-from lib.utils.paths import resolve_cache_paths, get_module_path
+from yt_lib.utils.app_context import RuntimeContext, create_service_context
 # from lib.utils.long_tool_loader import register_long_tools
 
 
@@ -24,22 +24,38 @@ from lib.utils.paths import resolve_cache_paths, get_module_path
 # -----------------------------
 logger = get_logger(__name__)
 
+ctx = RunContextStore(
+    create_service_runtime_context(
+        app_name="yt_mcp",
+        app_author="HenCode",
+    )
+)
+
+# for each discovered module with register()
+# module.register(mcp, ctx)
+
+
 # -----------------------------
 # Paths to tool, prompt, resource packages
 # -----------------------------
-def _get_tools_dir()->Path:
-    return get_module_path(start = Path(__file__)) / "Tools"
 
-def _get_prompts_dir()->Path:
-    return get_module_path(start = Path(__file__)) / "Prompts"
+def get_lib_root() -> Path:
+    return Path(__file__).resolve().parents[1]
 
-def _get_resources_dir()->Path:
-    return get_module_path(start = Path(__file__)) / "Resources"
+
+def _get_tools_dir() -> Path:
+    return get_lib_root() / "tools"
+
+
+def _get_prompts_dir() -> Path:
+    return get_lib_root() / "prompts"
+
+
+def _get_resources_dir() -> Path:
+    return get_lib_root() / "resources"
 
 def _get_cache_dir()->Path:
-    cache_path = get_module_path(start = Path(__file__)) / "Cache"
-    cache_path.mkdir(parents=True, exist_ok=True)
-    return cache_path
+    return ctx.transcript_dir()
 
 
 
@@ -47,7 +63,7 @@ def _get_cache_dir()->Path:
 # Server instance & conventions
 # -----------------------------
 mcp = FastMCP(
-    name="DemoServer",
+    name="MCP_Server",
     include_tags={"public", "api"},
     exclude_tags={"internal", "deprecated"},
     on_duplicate_tools="error",
@@ -63,25 +79,9 @@ def purge_server_cache(days: int = 1) -> None:
         Args:
             days (int): Number of days to keep cache files. Default is 7 days.
     """
-    # All audio files should be deleted after they are transcribed. So ony 
-    # files that are currently being transcribed or possibly failed transcriptions
-    # should be here.
-
     cutoff = time.time() - (days * 86400)
 
-    audio_dir = resolve_cache_paths(
-                app_name = "audio",
-                start = Path(__file__)
-            ).base_cache_dir
-    if audio_dir.exists():
-        for f in audio_dir.iterdir():
-            if f.is_file() and f.stat().st_atime < cutoff:
-                f.unlink(missing_ok=True)
-
-    transcript_dir = resolve_cache_paths(
-                app_name = "transcripts",
-                start = Path(__file__)
-            ).base_cache_dir
+    transcript_dir = ctx.transcript_dir()
     if transcript_dir.exists():
         for f in transcript_dir.iterdir():
             if f.is_file() and f.stat().st_atime < cutoff:
@@ -101,11 +101,8 @@ def attach_everything():
     # Purge old cache files on server startup
     purge_server_cache(days=1)
 
-    register_tools(mcp, package=_get_tools_dir())
+    register_tools(mcp, package_dir=_get_tools_dir())
     logger.info("✅	 Tools registered.")
-
-    # register_long_tools(mcp, package=_TOOLS_DIR)
-    # logger.info("✅	 Long tools registered.")
 
     register_prompts_from_markdown(mcp, prompts_dir=_get_prompts_dir())
     logger.info("✅	 Markdown files parsed and prompts registered.")
@@ -144,6 +141,27 @@ def main():
         Main entry point when launched "stand alone" 
         Parse arguments and start the server. 
     """
+    global ctx
+    ctx = RuntimeContext(
+        create_service_context(
+            app_name="yt_mcp",
+            app_author="HenCode",
+        )
+    )
+
+    # -----------------------------
+    # Logging setup
+    # -----------------------------
+    configure_logging(
+                    LogConfig(level="INFO"),
+                    force=True,
+                    file=FileLogConfig(path=ctx.log_dir()),
+                    tee_console=False,
+                )
+    global logger = get_logger(__name__)
+
+
+
 
     parser = argparse.ArgumentParser(description="Create and run an MCP server.")
     parser.add_argument("--host", type=str, default="127.0.0.1",
@@ -155,11 +173,4 @@ def main():
     launch_server(args.host, args.port)
 
 if __name__ == "__main__":
-    # -----------------------------
-    # Logging setup
-    # -----------------------------
-    configure_logging(LogConfig(level="INFO"))
-    
-
-
     main()
