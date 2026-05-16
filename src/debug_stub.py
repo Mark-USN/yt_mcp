@@ -4,16 +4,14 @@
     Many test can be run directly by calling uv run -m lib.dir.name.
 """
 
-
+# pylint: disable=import-outside-toplevel
 
 #./src/debug_stub.py
 
-# import signal
 import asyncio
-# import logging
 import argparse
 import sys
-from .lib.utils.log_utils import configure_logging, get_logger # , log_tree
+from yt_lib.utils.log_utils import configure_logging, get_logger # , log_tree
 
 # -----------------------------
 # Logging setup
@@ -42,12 +40,9 @@ def debug_stub():
         sys.exit(1)  # Exit with an error code
 
     match args.test:
-        case "demo-server":
-            import lib.mcp_servers.demo_server as demo
+        case "mcp-server":
+            import lib.mcp_servers.mcp_server as demo
             demo.main()
-        case "long-job-server":
-            import lib.mcp_servers.long_job_server as ljs
-            ljs.launch_server()
         case "universal-client":
             from lib.mcp_clients.universal_client import UniversalClient
             # import lib.mcp_clients.universal_client as uc
@@ -58,9 +53,6 @@ def debug_stub():
             # api_keys = api_vault()
             # google_key = api_keys.get_value("GOOGLE_KEY")
             yt_search.test()
-        case "yt-audio":
-            import lib.tools.youtube_audio_transcript as yt_audio
-            yt_audio.test()
 
 if __name__ == "__main__":
     # -----------------------------

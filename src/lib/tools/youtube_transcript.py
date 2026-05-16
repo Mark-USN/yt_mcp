@@ -21,21 +21,24 @@ Notes for AI agents:
 
 from __future__ import annotations
 
-from typing import TypedDict, TypeVar
+import time
+from typing import TypeVar
 from collections.abc import Sequence
 from fastmcp import FastMCP  # pylint: disable=unused-import
 from yt_lib.utils.log_utils import get_logger
 from yt_lib import yt_transcript
-from yt_lib.yt_transcript import TranscriptSnippet
-from yt_lib.yt_ids import extract_video_id
-from yt_lib.utils.app_context import RunContextStore
-# from lib.utils.paths import resolve_cache_paths
+from yt_lib.yt_transcript import (
+    TranscriptSnippet,
+    # set_context,
+    yt_json,
+    yt_text,
+    yt_sentences
+)
+from yt_lib.utils.app_context import RuntimeContext
 
 logger = get_logger(__name__)
 
 T = TypeVar("T", bound="FastMCP")
-
-
 
 def youtube_json(
     url_or_id: str,
@@ -55,7 +58,7 @@ def youtube_json(
         A JSON string or None.
 
     """
-    return yt_transcript.youtube_json(
+    return yt_json(
         url_or_id=url_or_id,
         prefer_langs=prefer_langs
     )
@@ -63,7 +66,7 @@ def youtube_json(
 def youtube_text(url_or_id: str, prefer_langs: Sequence[str] | None = None) -> str | None:
     """Return the transcript as a single space-joined string, or None."""
 
-    return yt_transcript.youtube_text(
+    return yt_text(
         url_or_id=url_or_id,
         prefer_langs=prefer_langs
     )
@@ -71,26 +74,26 @@ def youtube_text(url_or_id: str, prefer_langs: Sequence[str] | None = None) -> s
 
 def youtube_sentences(url_or_id: str, prefer_langs: Sequence[str] | None = None) -> str | None:
     """Return the transcript as paragraph-separated text, or None."""
-    return yt_transcript.youtube_sentences(
+    return yt_sentences(
         url_or_id=url_or_id,
         prefer_langs=prefer_langs
     )
 
 
 
-def register(mcp: T, ctx: RunContextStore) -> None:
+def register(mcp: T, ctx: RuntimeContext) -> None:
     """Register YouTube transcript tools with the MCP instance."""
 
     yt_transcript.set_context(ctx)
-    logger.debug("✅ Registering YouTube transcript tools")
-    mcp.tool(tags=["public", "api"])(youtube_json)
-    mcp.tool(tags=["public", "api"])(youtube_text)
-    mcp.tool(tags=["public", "api"])(youtube_sentences)
+    logger.debug("Registering YouTube transcript tools")
+    mcp.tool(tags={"public", "api"})(youtube_json)
+    mcp.tool(tags={"public", "api"})(youtube_text)
+    mcp.tool(tags={"public", "api"})(youtube_sentences)
 
 
 def test() -> None:
     """CLI entry point to test transcript retrieval (outside MCP)."""
-
+    # pylint: disable=import-outside-toplevel
     from datetime import timedelta
 
     yt_url = "https://www.youtube.com/watch?v=ulebPxBw8Uw"
@@ -98,7 +101,7 @@ def test() -> None:
     while not yt_url:
         yt_url = input("Enter YouTube URL: ").strip()
         if not yt_url:
-            logger.warning("⚠️ Please paste a valid YouTube URL.")
+            logger.warning("Please paste a valid YouTube URL.")
 
     start = time.perf_counter()
     trans = youtube_json(yt_url)
@@ -106,21 +109,21 @@ def test() -> None:
     print("\n\n--- JSON TRANSCRIPT ---\n")
     # `youtube_jason()` already returns a JSON string.
     print(trans)
-    print(f"\n✅ Transcribed in {timedelta(seconds=elapsed)}.\n")
+    print(f"\nTranscribed in {timedelta(seconds=elapsed)}.\n")
 
     start = time.perf_counter()
     trans = youtube_text(yt_url)
     elapsed = time.perf_counter() - start
     print("\n\n--- TEXT TRANSCRIPT ---\n")
     print(trans)
-    print(f"\n✅ Transcribed in {timedelta(seconds=elapsed)}.\n")
+    print(f"\nTranscribed in {timedelta(seconds=elapsed)}.\n")
 
     start = time.perf_counter()
-    trans = youtube_paragraph(yt_url)
+    trans = youtube_sentences(yt_url)
     elapsed = time.perf_counter() - start
     print("\n\n--- PARAGRAPH TRANSCRIPT ---\n")
     print(trans)
-    print(f"\n✅ Transcribed in {timedelta(seconds=elapsed)}.\n")
+    print(f"\nTranscribed in {timedelta(seconds=elapsed)}.\n")
 
 
 if __name__ == "__main__":

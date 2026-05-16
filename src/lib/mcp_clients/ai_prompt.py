@@ -1,16 +1,19 @@
+""" Example of using an LLM to normalize a YouTube search query and post-filter results."""
+
 from __future__ import annotations
 
 import json
 # import os
 from dataclasses import dataclass
-from typing import Any, Annotated,Iterable
+from typing import Any, Iterable
 from openai import OpenAI
-from lib.utils.api_keys import api_vault
+from yt_lib.utils.api_keys import ApiVault
 
 
 
-def _get_openai_client():
-    vault = api_vault()
+def _get_openai_client() -> Any:
+    """ Return an authenticated OpenAI client using api_vault for key management. """
+    vault = ApiVault()
     openai_key = vault.get_value(key="OPENAI_KEY")
     if not openai_key:
         raise RuntimeError("Missing OPENAI_KEY from api_vault()")
@@ -18,6 +21,7 @@ def _get_openai_client():
 
 @dataclass(slots=True)
 class NormalizedQuery:
+    """ Structured representation of a YouTube search query, normalized by an LLM. """
     query: str
     includes: list[str]
     excludes: list[str]
@@ -47,11 +51,21 @@ YOUTUBE_QUERY_SCHEMA = {
 
 @dataclass(slots=True)
 class LlmMessage:
+    """ A normalized message format for LLM interactions."""
     role: str
     content: str
 
 
 def _coerce_content_to_text(content: Any) -> str:
+    """ Coerce various content formats to plain text for OpenAI input.
+        Args:
+            content (Any): The content to coerce, which may be a string, an object
+            with a .text attribute, or a list of such items.
+        Returns:
+            str: The coerced text content.
+        Raises:
+            TypeError: If the content cannot be coerced to text.
+    """
     if isinstance(content, str):
         return content
 
@@ -76,7 +90,16 @@ def _coerce_content_to_text(content: Any) -> str:
     raise TypeError(f"Unsupported content type for OpenAI: {type(content)!r}")
 
 def _get(obj: Any, name: str) -> Any:
-    """Read field `name` from dict-like OR attribute-like objects."""
+    """ Read field `name` from dict-like OR attribute-like objects.
+        Args:
+            obj (Any): The object to read from, which may be a dict or an object
+            name (str): The name of the field to read.
+        Returns:
+            Any: The value of the field.
+        Raises:
+            KeyError: If the field is not found in a dict.
+            AttributeError: If the field is not found in an object.
+    """
     if isinstance(obj, dict):
         return obj[name]
     return getattr(obj, name)
@@ -84,18 +107,33 @@ def _get(obj: Any, name: str) -> Any:
 
 
 def mcp_messages_to_openai(messages: list[Any]) -> list[dict[str,str]]:
+    """ Convert FastMCP PromptResult.messages to OpenAI API input format.
+            Args:
+                messages (list[Any]): A list of messages from FastMCP, which may be dict-like
+                                        or attribute-like.
+            Returns:
+                list[dict[str, str]]: A list of messages formatted for OpenAI API input.
+            Raises:
+                TypeError: If the input messages are not in a supported format.
+        """
     return [{"role": str(m.role), "content": _coerce_content_to_text(m.content)} for m in messages]
 
 
 def prompt_result_messages_to_llm(messages: Any) -> list[LlmMessage]:
+    """ Normalize `PromptResult.messages` into a stable `list[LlmMessage]`.
+        Args:
+            messages (Any): The messages to normalize, which may be a string or an iterable of
+                            dict-like or attribute-like objects.
+        Returns:
+            list[LlmMessage]: A list of normalized LlmMessage objects.
+        Raises:
+            TypeError: If the input messages are not in a supported format.
+        Handles FastMCP return shapes:
+          - messages is str  -> one user message
+          - messages is list -> each element may be dict-like or attribute-like
     """
-    Normalize `PromptResult.messages` into a stable `list[LlmMessage]`.
-
-    Handles FastMCP return shapes:
-      - messages is str  -> one user message
-      - messages is list -> each element may be dict-like or attribute-like
-    """
-    # FastMCP docs: PromptResult.messages can be str or list[Message]. :contentReference[oaicite:1]{index=1}
+    # FastMCP docs: PromptResult.messages can be str or list[Message].
+    # :contentReference[oaicite:1]{index=1}
     if isinstance(messages, str):
         return [LlmMessage(role="user", content=messages)]
 
@@ -111,10 +149,12 @@ def prompt_result_messages_to_llm(messages: Any) -> list[LlmMessage]:
     return out
 
 def _messages_to_openai_input(messages: list[LlmMessage]) -> list[dict[str, Any]]:
-    """
-    Convert internal messages to OpenAI Responses API input items.
-
-    This uses a simple pattern: one 'message' item per LlmMessage.
+    """ Convert internal messages to OpenAI Responses API input items.
+        Args:
+            messages (list[LlmMessage]): A list of internal LlmMessage objects.
+        Returns:
+            list[dict[str, Any]]: A list of messages formatted for OpenAI Responses API input.
+        This uses a simple pattern: one 'message' item per LlmMessage.
     """
     return [
         {
@@ -126,6 +166,16 @@ def _messages_to_openai_input(messages: list[LlmMessage]) -> list[dict[str, Any]
 
 
 def normalize_youtube_query(messages: list[LlmMessage]) -> NormalizedQuery:
+    """ Normalize a YouTube search query using an LLM and return a structured NormalizedQuery.
+        Args:
+            messages (list[LlmMessage]): The input messages to the LLM, which should include
+                                         the user's search query.
+        Returns:
+            NormalizedQuery: A structured representation of the normalized YouTube search query.
+        Raises:
+            RuntimeError: If the LLM response cannot be parsed or does not conform to the
+                          expected schema.
+    """
     resp = _get_openai_client().responses.create(
         model="gpt-5.2",
         input=_messages_to_openai_input(messages),
@@ -152,11 +202,18 @@ def post_filter(
     results: list[dict[str, Any]],
     normalized: NormalizedQuery,
 ) -> list[dict[str, Any]]:
+    """ Post-filter YouTube search results based on a normalized query.
+        Args:
+            results (list[dict[str, Any]]): The raw search results from YouTube.
+            normalized (NormalizedQuery): The normalized query to filter results against.
+        Returns:
+            list[dict[str, Any]]: The filtered list of search results.
+    """
     filtered: list[dict[str, Any]] = []
 
     for r in results:
-        title = r.title.lower()
-        description = (r.description or "").lower()
+        title = (r["title"] or "").lower()
+        description = (r["description"] or "").lower()
 
         text = f"{title} {description}"
 
@@ -174,14 +231,12 @@ def post_filter(
 
         # channel name check (if needed)
         if normalized.channels:
-            if r.channel_title not in normalized.channels:
+            if (r.get("channel_title") or "") not in normalized.channels:
                 continue
 
         filtered.append(r)
 
     return filtered
-
-
 
 if __name__ == "__main__":
     nq = normalize_youtube_query(
@@ -189,4 +244,3 @@ if __name__ == "__main__":
     )
     print(nq.query)
     print(nq)
-

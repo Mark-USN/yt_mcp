@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<service>
+	<id>mcp_server</id>
+	<name>YT MCP Server</name>
+	<description>FastMCP server for finding and retrieving YouTube transcripts</description>
+
+	<!-- Environment variables for the MCP server 
+		 Also used when yt_mcp_service client mode parses the config file to determine
+		 where to connect
+	-->
+	<env name="YTMCP_HOST" value="127.0.0.1"/>
+	<env name="YTMCP_PORT" value="8085"/>	
+
+	<!-- Where the process runs -->
+	<workingdirectory>C:\Users\mhenw\Source\repos\Mark-USN\yt_mcp\src</workingdirectory>
+
+	<!-- What to run -->
+	<executable>C:\Users\mhenw\Source\repos\Mark-USN\yt_mcp\.venv\Scripts\python.exe</executable>
+	<arguments>-m lib.mcp_servers.mcp_server --host %YTMCP_HOST% --port %YTMCP_PORT%</arguments>
+
+	<!-- Starting up -->
+	<!--
+	<startmode>Manual</startmode>
+	-->
+	<startmode>Automatic</startmode>
+
+
+	<!-- Logging -->
+	<logpath>C:\ProgramData\yt_mcp\logs</logpath>
+	<log mode="roll-by-size">
+		<sizeThreshold>10240</sizeThreshold>
+		<!-- 10 MB -->
+		<keepFiles>5</keepFiles>
+	</log>
+
+	<!-- Restart behavior -->
+	<!--
+	<onfailure action="restart" delay="10 sec"/>
+	<resetfailure>1 hour</resetfailure>
+	-->
+
+	<!-- Stop behavior -->
+	<stoptimeout>15 sec</stoptimeout>
+
+	<!-- Environment (optional but VERY useful) -->
+	<env name="PYTHONUNBUFFERED" value="1"/>
+</service>

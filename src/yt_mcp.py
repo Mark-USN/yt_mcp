@@ -1,7 +1,7 @@
-""" 20251010 MMH model_context_protocol.py
+""" 20251010 MMH yt_mcp.py
     A driver program to start/stop a detached MCP server or run a client. 
 
-    USAGE: model_context_protocol.py --mode server|client|stop-server, 
+    USAGE: yt_mcp.py --mode server|client|stop-server, 
                 [--host HOST] [--port PORT] [--debug True/False]
     Parameters:
         --mode: "server" to start a detached server, "client" to run a client,
@@ -19,13 +19,16 @@ import argparse
 import asyncio
 import subprocess
 import signal
+import logging
 from pathlib import Path
-from yt_lib.utils.log_utils import LogConfig, FileLogConfig, configure_logging, get_logger 
-from yt_lib.utils.app_context import RuntimeContext, create_user_base_context
-from yt_lib.yt_ids import YoutubeIdKind, extract_video_id
-from yt_lib.yt_search import youtube_search, extract_video_id
-from yt_lib.yt_transcript import youtube_json
-
+from yt_lib.utils.log_utils import (
+   LogConfig,
+   FileLogConfig,
+   configure_logging,
+   get_logger,
+   log_tree
+)
+from yt_lib.utils.app_context import RuntimeContext, create_user_context
 from lib.mcp_servers import mcp_server
 from lib.mcp_clients.universal_client import UniversalClient
 
@@ -33,6 +36,7 @@ ctx = RuntimeContext(
     create_user_context(
         app_name="yt_mcp",
         app_author="HenCode",
+        app_dir=Path(__file__).parent.resolve(),
     )
 )
 
@@ -40,20 +44,12 @@ ctx = RuntimeContext(
 # Logging setup
 # -----------------------------
 configure_logging(
-                LogConfig(level="INFO"),
+                LogConfig(ctx.app_name, log_level="INFO"),
+                file_log_conf=FileLogConfig(log_file=ctx.log_path()),
                 force=True,
-                file=FileLogConfig(path=ctx.log_dir()),
-                tee_console=False,
+                tee_console=True,
             )
 logger = get_logger(__name__)
-
-# -----------------------------
-# Paths (PID & LOG live next to this file)
-# -----------------------------
-
-svr_pid = ctx.cache_dir() / "mcp.pid"
-svr_log = ctx.log_dir() / "mcp_subprocess.log"
-
 
 # ---- Helper to find pythonw.exe on Windows ----
 # On Windows, we want to use pythonw.exe to avoid a console window popping up.
@@ -74,7 +70,7 @@ def _pythonw_exe():
 
 
 # ---- Background launcher (detached subprocess) ----
-def start_server(host: str, port: int, debug: bool, mode:str):
+def start_server(host: str, port: int, debug: bool):
     """ 20251101 MMH start_server
         Launches the MCP server as either a child process or as a detached process,
         depending on the debug flag. False will launch a detached process.
@@ -91,6 +87,15 @@ def start_server(host: str, port: int, debug: bool, mode:str):
     # the parent's console window, which results in the server terminating
     # when the parent exits.
 
+    # -------------------------------------------------------------
+    # Paths for server PID & LOG files (used in detached mode)
+    # -------------------------------------------------------------
+    server_pid_file = ctx.cache_dir / "mcp.pid" if isinstance(ctx.cache_dir, Path) else \
+                        Path(f"{ctx.cache_dir}/mcp.pid")
+    svr_log = ctx.log_dir / "mcp_server.log" if isinstance(ctx.log_dir, Path) else \
+                Path(f"{ctx.log_dir}/mcp_server.log")
+
+
     # Command line to run the server module
     cmd_str = "lib.mcp_servers.mcp_server"
 
@@ -105,27 +110,26 @@ def start_server(host: str, port: int, debug: bool, mode:str):
     # Platform-specific detachment options
     kwargs: dict = {}
     if os.name == "nt":
-        flags = subprocess.DETACHED_PROCESS 
+        flags = subprocess.DETACHED_PROCESS
         kwargs["creationflags"] = flags
         # NOTE: no close_fds here on Windows, because of redirected std handles
     else:
         kwargs["preexec_fn"] = os.setpgrp  # pylint: disable=no-member
         kwargs["close_fds"] = True
-    
     # 20251204 MMH: Ensure log file and pid file exist
     svr_log.parent.mkdir(parents=True, exist_ok=True)
-    svr_pid.parent.mkdir(parents=True, exist_ok=True)
+    server_pid_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Use `with` for the log file only; the server keeps running after this
     # script exits.
-    logger.info("✅ %s started (detached) on http://%s:%i.", cmd_str, host, port)
+    logger.info("%s started (detached) on http://%s:%i.", cmd_str, host, port)
     logger.info("Launching subprocess (output -> %s)", svr_log)
     with open(svr_log, "a",
               buffering=1,
               encoding="utf-8",
               errors="replace") as log_fh:
         # pylint: disable=consider-using-with
-        proc = subprocess.Popen(        
+        proc = subprocess.Popen(
             cmd,
             stdout=log_fh,
             stderr=log_fh,
@@ -138,8 +142,8 @@ def start_server(host: str, port: int, debug: bool, mode:str):
     #   - Child process is running independently
     #   - log_fh is closed in the parent (child still has its own handles)
     #   - We only keep and record the PID
-    svr_pid.write_text(str(proc.pid), encoding="utf-8")
-    logger.info("✅ Server started (detached) on http://%s:%i.", host, port)
+    server_pid_file.write_text(str(proc.pid), encoding="utf-8")
+    logger.info("Server started (detached) on http://%s:%i.", host, port)
     log_tree(
         logger,
         logging.DEBUG,
@@ -160,18 +164,21 @@ def stop_server():
     """ 20251101 MMH stop_server
         Stop a previously started detached server using the PID file.
     """
-    if not svr_pid.exists():
-        logger.error("🛑	 No PID file found; server may not be running.")
+    server_pid_file = ctx.cache_dir / "mcp.pid" if isinstance(ctx.cache_dir, Path) else \
+                        Path(f"{ctx.cache_dir}/mcp.pid")
+
+    if not server_pid_file.exists():
+        logger.error("No PID file found; server may not be running.")
         return
 
     try:
-        pid = int(svr_pid.read_text(encoding="utf-8").strip() or "0")
+        pid = int(server_pid_file.read_text(encoding="utf-8").strip() or "0")
     except ValueError:
-        logger.error("🛑	 No PID file found; server may not be running.")
+        logger.error("No PID file found; server may not be running.")
         return
 
     if pid <= 0:
-        logger.error("🛑	 No PID file found; server may not be running.")
+        logger.error("No PID file found; server may not be running.")
         return
 
     # Try to terminate cross-platform
@@ -184,14 +191,14 @@ def stop_server():
             os.kill(pid, signal.SIGTERM)
             logger.info("ℹ Sent stop signal to PID %i.", pid)
     except ProcessLookupError as e:
-        logger.error("🛑 Process %i not found.", pid)
-        raise SystemExit(f"🛑 Process {pid} not found.  Error = {e}") from e
+        logger.error("Process %i not found.", pid)
+        raise SystemExit(f"Process {pid} not found.  Error = {e}") from e
 
 
 
     # Clean up PID file regardless (best-effort)
     # Remove the old PID files if present
-    svr_pid.unlink(missing_ok=True)
+    server_pid_file.unlink(missing_ok=True)
 
 
 def port_type(value: str) -> int:
@@ -200,14 +207,14 @@ def port_type(value: str) -> int:
     """
     try:
         port = int(value)
-    except ValueError as e:
-        logger.error("❌ Port must be an integer.\n%s Port = %s.",
-            str(value), e)
-        raise SystemExit(f"❌ Port must be an integer.\n{value} Port = {e}") from e
+    except ValueError as err:
+        logger.error("Port must be an integer.\n%s Port = %s.",
+            str(value), err)
+        raise SystemExit(f"Port must be an integer.\n{value} Port = {err}") from err
     if not 1 <= port <= 65535:
-        logger.error("❌ Port number must be between 1 and 65535 (got {port!r})")
+        logger.error("Port number must be between 1 and 65535 (got {port!r})")
         raise SystemExit(
-            f"Port number must be between 1 and 65535!. Port = {port}.") from e
+            f"Port number must be between 1 and 65535!. Port = {port}.") from err
     return port
 
 def main():
@@ -234,13 +241,13 @@ def main():
     args = parser.parse_args()
 
     # 20251215 MMH Show help if no arguments are given
-    if len(sys.argv) == 1:  
+    if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)  # Exit with an error code
 
     if args.mode == "server":
         # Parent: launch a detached child and return immediately
-        start_server(args.host, args.port, args.debug, args.mode)
+        start_server(args.host, args.port, args.debug)
         # Parent exits now; detached child continues running.
 
     elif args.mode == "stop-server":
@@ -249,12 +256,6 @@ def main():
     elif args.mode == "client":
         client = UniversalClient(args.host, args.port)
         asyncio.run(client.run())
-    
-    elif args.mode == "long-job-server":
-        # Parent: launch a detached child and return immediately
-        start_server(args.host, args.port, args.debug, args.mode)
-        # Parent exits now; detached child continues running.
-
 
 if __name__ == "__main__":
     # If run as a script, execute main().

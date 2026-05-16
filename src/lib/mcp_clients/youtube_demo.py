@@ -1,4 +1,4 @@
-﻿"""
+"""
 YouTube demo workflow for UniversalClient.
 
 Runs youtube_search, classifies results, optionally samples playlists,
@@ -6,34 +6,37 @@ and exercises transcript tools in a round-robin pattern so that each
 tool is exercised without calling the same URL four times.
 """
 
+# pylint: disable=global-statement
+
 from __future__ import annotations
 
 import json
-import logging
-# import re
 import time
 from datetime import timedelta
 from typing import Any
-# from lib.utils.paths import resolve_cache_paths
-from lib.utils.youtube_ids import extract_video_id, extract_playlist_id
-# from urllib.parse import parse_qs, urlparse
-from lib.utils.log_utils import get_logger, log_tree
+from yt_lib.yt_ids import extract_video_id, extract_playlist_id
+from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.utils import log_utils
 from .ai_prompt import (
-    # NormalizedQuery, 
-    # mcp_messages_to_openai,
     prompt_result_messages_to_llm,
-    normalize_youtube_query, 
-    post_filter, 
-    # LlmMessage
+    normalize_youtube_query,
 )
 
 
-logger = get_logger(__name__)
+logger = log_utils.get_logger(__name__)
+
+ctx:RuntimeContext
 
 # -------------------------------------------------
 # Tool discovery
 # -------------------------------------------------
 async def fetch_tool_names(client: Any) -> set[str]:
+    """ Fetch the names of available tools from the MCP client.
+        Args:
+            client (Any): The MCP client to use for API calls.
+        Returns:
+            set[str]: A set of tool names available from the MCP client.
+    """
     tools = await client.list_tools()
     return {getattr(t, "name", "") for t in tools if getattr(t, "name", "")}
 
@@ -45,6 +48,14 @@ async def exercise_transcripts_round_robin(
     client: Any,
     video_urls: list[str],
 ) -> None:
+    """ Exercise available YouTube transcript tools in a round-robin pattern across the provided
+        video URLs.
+        Args:
+            client (Any): The MCP client to use for API calls.
+            video_urls (list[str]): A list of video URLs to process.
+        Returns:
+            None
+    """
     tool_names = await fetch_tool_names(client)
 
     tools_in_order = [
@@ -62,12 +73,12 @@ async def exercise_transcripts_round_robin(
         start = time.perf_counter()
         result = await client.call_tool(tool, {"url_or_id": url})
         elapsed = time.perf_counter() - start
-        log_tree(
+        log_utils.log_tree(
                 logger,
-                logging.INFO,
+                log_utils.INFO,
                 f"{tool}({url}):",
                 result,
-                collapse_keys={"env"},  # env can be huge/noisy
+                collapse_keys={"env", "data"},  # env can be huge/noisy
                 redact_keys={"token", "api_key"},
             )
 
@@ -86,9 +97,19 @@ async def exercise_transcripts_round_robin(
 # Search exerciser
 # -------------------------------------------------
 async def exercise_youtube_search(client: Any) -> list[dict[str, Any]]:
+    """ Exercise the youtube_search tool by normalizing a search query with an LLM and then
+        performing the search.
+        Args:
+            client (Any): The MCP client to use for API calls.
+        Returns:
+            list[dict[str, Any]]: A list of search result items.
+    """
     if not client.yt_search:
-        client.yt_search = "English language python tutorials about list comprehension do not include short videos."
-    
+        client.yt_search = (
+                "English language python tutorials about list "
+                "comprehension do not include short videos."
+            )
+
     logger.info("Executing youtube_query_normalizer prompt")
     prompt_result = await client.get_prompt(
         "youtube_query_normalizer",
@@ -97,23 +118,23 @@ async def exercise_youtube_search(client: Any) -> list[dict[str, Any]]:
 
     openai_messages = prompt_result_messages_to_llm(prompt_result.messages)
 
-    log_tree(
+    log_utils.log_tree(
             logger,
-            logging.INFO,
+            log_utils.INFO,
             "OpenAI Messages:",
             openai_messages,
-            collapse_keys={"env"},  # env can be huge/noisy
+            collapse_keys={"env", "data"},  # env can be huge/noisy
             redact_keys={"token", "api_key"},
         )
 
     ai_query = normalize_youtube_query(openai_messages)
     query = ai_query.query
-    log_tree(
+    log_utils.log_tree(
             logger,
-            logging.INFO,
+            log_utils.INFO,
             "ai_query:",
             ai_query,
-            collapse_keys={"env"},  # env can be huge/noisy
+            collapse_keys={"env", "data"},  # env can be huge/noisy
             redact_keys={"token", "api_key"},
         )
     logger.info("Normalized YouTube query: %s", query)
@@ -125,29 +146,29 @@ async def exercise_youtube_search(client: Any) -> list[dict[str, Any]]:
         }
 
     logger.info("Running youtube_search:")
-    log_tree(
+    log_utils.log_tree(
             logger,
-            logging.INFO,
+            log_utils.INFO,
             "youtube_search:",
             yt_search_args,
-            collapse_keys={"env"},  # env can be huge/noisy
+            collapse_keys={"env", "data"},  # env can be huge/noisy
             redact_keys={"token", "api_key"},
         )
 
     res = await client.call_tool("youtube_search", yt_search_args)
-    call_title = ( 
+    call_title = (
         'youtube_search('
         f'query: {yt_search_args["query"]}, '
         f'order: {yt_search_args["order"]}, '
         f'max_results: {yt_search_args["max_results"]})'
     )
 
-    log_tree(
+    log_utils.log_tree(
         logger,
-        logging.INFO,
+        log_utils.INFO,
         call_title,
         res,
-        collapse_keys={"env"},  # env can be huge/noisy
+        collapse_keys={"env", "data"},  # env can be huge/noisy
         redact_keys={"token", "api_key"},
     )
 
@@ -159,8 +180,16 @@ async def exercise_youtube_search(client: Any) -> list[dict[str, Any]]:
 # -------------------------------------------------
 # Main demo
 # -------------------------------------------------
-async def run_youtube_demo(client: Any) -> None:
-
+async def run_youtube_demo(client: Any, parent_ctx: RuntimeContext) -> None:
+    """ Run the YouTube demo, including search, playlist sampling, and transcript processing.
+        Args:
+            client (Any): The MCP client to use for API calls.
+            parent_ctx (RuntimeContext): The runtime context for the demo.
+        Returns:
+            None
+    """
+    global ctx
+    ctx = parent_ctx
     video_urls: list[str] = []
     playlist_urls: list[str] = []
 
@@ -179,13 +208,13 @@ async def run_youtube_demo(client: Any) -> None:
             "youtube_playlist_video_list",
             {"playlist": playlist_urls[0], "max_videos": 5},
         )
-        log_tree(
+        log_utils.log_tree(
             logger,
-            logging.INFO,
+            log_utils.INFO,
             f"youtube_playlist_video_list(playlist:{playlist_urls[0]}, "
             "max_videos: 5)",
             pl_vid_result,
-            collapse_keys={"env"},  # env can be huge/noisy
+            collapse_keys={"env", "data"},  # env can be huge/noisy
             redact_keys={"token", "api_key"},
         )
         # pl_vid_list = getattr(pl_vid_result, "data", {}) or {}

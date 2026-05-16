@@ -1,4 +1,4 @@
-﻿"""Definition of prompt functions for use with an MCP server (mcp_yt_server)."""
+"""Definition of prompt functions for use with an MCP server (mcp_yt_server)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,8 @@ from typing import TypeVar
 from fastmcp import FastMCP
 from fastmcp.prompts.prompt import Message, PromptResult # ,PromptMessage, TextContent
 from pydantic import Field
-from lib.utils.log_utils import get_logger # , log_tree
+from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.utils.log_utils import get_logger # , log_tree
 
 
 T = TypeVar("T", bound=FastMCP)
@@ -22,7 +23,14 @@ def youtube_query_normalizer(
         )
     ),
 ) -> PromptResult:
-    """Return a prompt that instructs an AI to normalize a YouTube query into advanced search syntax."""
+    """ Return a prompt that instructs an AI to normalize a YouTube query into advanced search
+        syntax.
+        Args:
+            search_string (str): Raw user search string.
+        Returns:
+            PromptResult: A prompt result containing a single Message with instructions for
+                            normalization.
+    """
     return [
         Message(
             f"""You are a search-query normalizer for YouTube.
@@ -85,9 +93,10 @@ Only produce the JSON object.
     ]
 
 
-def register(mcp: T) -> None:
+def register(mcp: T, parent_ctx: RuntimeContext) -> None:
     """Register prompts with the MCP server instance."""
-    logger.info("✅ Registering prompts")
+    logger.info("Registering prompts")
 
+    _ctx = parent_ctx
     # YouTube-specific prompt (query normalization)
-    mcp.prompt(tags=["public", "api", "youtube"])(youtube_query_normalizer)
+    mcp.prompt(tags={"public", "api", "youtube"})(youtube_query_normalizer)

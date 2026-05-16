@@ -32,7 +32,6 @@ TestResults/
 # ---- Other common ----
 .DS_Store
 Thumbs.db
-uv.lock
 src/Reference/
 cache/
 mcp.pid
@@ -40,10 +39,5 @@ mcp.log
 *.sln
 *.pyproj
 *.pyproj.user
-UnicodeTable.md
 .env
-ffmpegLocation.txt
-.bin/
-License/
-DAYJZLERqe8.*
-Ro_MScTDfU4*.*
+*.exe

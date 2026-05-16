@@ -1,10 +1,10 @@
 [project]
 name = "model-context-protocol"
-version = "0.1.0"
+version = "0.1.5"
 description = "Add your description here"
 readme = "README.md"
 # Optional but recommended: cap at <3.13 so uv doesn't try to solve for 3.13+
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.14"
 dependencies = [
     "fastmcp>=2.13.0.2",
     "google-api-python-client>=2.187.0",
@@ -17,6 +17,7 @@ dependencies = [
     "yt_lib @ git+https://github.com/Mark-USN/yt_lib.git",
     "youtube-transcript-api>=1.2.3",
     "yt-dlp>=2025.10.22",
+    "mypy>=1.20.2",
 ]
 
 # Tell uv about the PyTorch CUDA 12.8 index
@@ -34,7 +35,7 @@ torchvision = [
     { index = "pytorch-cu128" },
 ]
 yt-lib = [
-     { path = "C:/Users/mhenw/Source/repos/Mark-USN/yt_lib" },
-#     { git = "https://github.com/Mark-USN/yt_lib.git", rev = "main" },
+#     { path = "C:/Users/mhenw/Source/repos/Mark-USN/yt_lib" },
+    { git = "https://github.com/Mark-USN/yt_lib.git", rev = "main" },
 ]
 

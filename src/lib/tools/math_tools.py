@@ -5,7 +5,7 @@ from typing import TypeVar
 # from pathlib import Path
 from fastmcp import FastMCP
 from yt_lib.utils.log_utils import get_logger # , log_tree
-from yt_lib.utils.app_context import RunContextStore
+from yt_lib.utils.app_context import RuntimeContext
 
 T = TypeVar("T", bound=FastMCP)
 
@@ -24,8 +24,9 @@ def multiply(a: float, b: float) -> str:
     """Multiply two numbers (strings ok); returns string."""
     return str(float(a) * float(b))
 
-def register(mcp: T, ctx: RunContextStore) -> None:
+def register(mcp: T, parent_ctx: RuntimeContext) -> None:
     """Register math tools with MCPServer."""
-    logger.info("✅ Registering math tools")
-    mcp.tool(tags=["public", "api"])(add)
-    mcp.tool(tags=["public", "api"])(multiply)
+    _ctx = parent_ctx
+    logger.info("Registering math tools")
+    mcp.tool(tags={"public", "api"})(add)
+    mcp.tool(tags={"public", "api"})(multiply)
