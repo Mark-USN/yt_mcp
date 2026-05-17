@@ -4,7 +4,7 @@ version = "0.1.5"
 description = "Add your description here"
 readme = "README.md"
 # Optional but recommended: cap at <3.13 so uv doesn't try to solve for 3.13+
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
     "fastmcp>=2.13.0.2",
     "google-api-python-client>=2.187.0",
