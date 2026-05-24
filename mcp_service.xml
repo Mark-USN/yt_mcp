@@ -9,6 +9,7 @@
 		 Also used when yt_mcp_service client mode parses the config file to determine
 		 where to connect
 	-->
+	<env name="YTMCP_RUNTIME" value="service"/>
 	<env name="YTMCP_HOST" value="127.0.0.1"/>
 	<env name="YTMCP_PORT" value="8085"/>	
 
@@ -17,7 +18,12 @@
 
 	<!-- What to run -->
 	<executable>C:\Users\mhenw\Source\repos\Mark-USN\yt_mcp\.venv\Scripts\python.exe</executable>
-	<arguments>-m lib.mcp_servers.mcp_server --host %YTMCP_HOST% --port %YTMCP_PORT%</arguments>
+	<arguments>
+		-m lib.mcp_servers.mcp_server 
+		--runtime %YTMCP_RUNTIME% 
+		--host %YTMCP_HOST% 
+		--port %YTMCP_PORT%
+	</arguments>
 
 	<!-- Starting up -->
 	<!--

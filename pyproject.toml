@@ -1,5 +1,5 @@
 [project]
-name = "model-context-protocol"
+name = "yt_mcp"
 version = "0.1.5"
 description = "Add your description here"
 readme = "README.md"

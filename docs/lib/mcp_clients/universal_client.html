@@ -399,7 +399,7 @@ and exercises known workflows using safe, deterministic arguments.</p>
                     <div class="attr variable">
             <span class="name">ctx</span>        =
 <input id="ctx-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="ctx-view-value"></label><span class="default_value">RuntimeContext(ctx=BaseContext(app_name=&#39;universal_client&#39;, app_author=&#39;HenCode&#39;, app_dir=WindowsPath(&#39;C:/Users/mhenw/Source/repos/Mark-USN/yt_mcp/src/lib/mcp_clients&#39;), locale=&#39;en_US&#39;, cache_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/universal_client/Cache&#39;), config_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/universal_client&#39;), data_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/universal_client&#39;), state_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/universal_client&#39;), log_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/universal_client/Logs&#39;), documents_dir=WindowsPath(&#39;C:/Users/mhenw/OneDrive/Documents&#39;)))</span>
+            <label class="view-value-button pdoc-button" for="ctx-view-value"></label><span class="default_value">RuntimeContext(ctx=BaseContext(app_name=&#39;universal_client&#39;, app_author=&#39;HenCode&#39;, app_dir=WindowsPath(&#39;C:/Users/UserName/Source/repos/Mark-USN/yt_mcp/src/lib/mcp_clients&#39;), locale=&#39;en_US&#39;, cache_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/universal_client/Cache&#39;), config_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/universal_client&#39;), data_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/universal_client&#39;), state_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/universal_client&#39;), log_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/universal_client/Logs&#39;), documents_dir=WindowsPath(&#39;C:/Users/UserName/OneDrive/Documents&#39;)))</span>
 
         
     </div>
@@ -546,7 +546,7 @@ and exercises known workflows using safe, deterministic arguments.</p>
 <div class="attr class">
             
     <span class="def">class</span>
-    <span class="name">UniversalClient</span><wbr>(<span class="base">typing.Generic[~ClientTransportT]</span>):
+    <span class="name">UniversalClient</span><wbr>(<span class="base">typing.Generic[~ClientTransportT]</span>, <span class="base">fastmcp.client.mixins.resources.ClientResourcesMixin</span>, <span class="base">fastmcp.client.mixins.prompts.ClientPromptsMixin</span>, <span class="base">fastmcp.client.mixins.tools.ClientToolsMixin</span>, <span class="base">fastmcp.client.mixins.task_management.ClientTaskManagementMixin</span>):
 
                 <label class="view-source-button" for="UniversalClient-view-source"><span>View Source</span></label>
 
@@ -854,7 +854,7 @@ Args:
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">cache_output_dir</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span>:</span></span>
+        <span class="name">cache_output_dir</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span>:</span></span>
 
                 <label class="view-source-button" for="UniversalClient.cache_output_dir-view-source"><span>View Source</span></label>
 

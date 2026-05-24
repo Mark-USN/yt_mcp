@@ -84,10 +84,17 @@ async def exercise_transcripts_round_robin(
 
         vid = extract_video_id(url) or f"video_{idx}"
         out = client.cache_output_dir() / f"{vid}.{ext}"
-        payload = getattr(result, "data", result)
+        payload = getattr(result, "content", result)
+        # payload is:
+        # [TextContent(type='text', text='[{"text":"..."}]', ...)]
 
+        if isinstance(payload, list) and payload:
+            first = payload[0]
+
+            # Extract embedded JSON string
+            json_text = first.text
         if ext in {"json"}:
-            out.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+            out.write_text(json_text, encoding="utf-8")
         else:
             out.write_text(str(payload), encoding="utf-8")
 

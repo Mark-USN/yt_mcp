@@ -5,13 +5,12 @@
         from the 'tools' package,
 """
 
-# pylint: disable=global-statement
-
 from __future__ import annotations
 
 import argparse
 import time
 from pathlib import Path
+from enum import StrEnum, auto
 from fastmcp import FastMCP
 from yt_lib.utils.log_utils import (
     Logger,
@@ -20,9 +19,14 @@ from yt_lib.utils.log_utils import (
     configure_logging,
     get_logger
 )
-from yt_lib.utils.app_context import RuntimeContext, create_service_context
+from yt_lib.utils.app_context import RuntimeContext, create_user_context, create_service_context
 from lib.utils.modules_registrar import PyRegistrar, PromptRegistrar, ResourcesRegistrar
 
+
+
+class ServerRuntime(StrEnum):
+    USER = auto()
+    SERVICE = auto()
 
 class MCPServer:
     """ Class-based implementation of the MCP server. 
@@ -40,21 +44,33 @@ class MCPServer:
 
     def __init__(
             self,
+            mode: ServerRuntime = ServerRuntime.USER,
             server_name: str = "MCP_Server",
             app_author: str = "HenCode",
             app_dir: Path | None = None,
             lib_root: Path | None = None,
         ) -> None:
+
         # -----------------------------
         # context setup
         # -----------------------------
-        self.ctx = RuntimeContext(
-            create_service_context(
-                app_name=server_name,
-                app_author=app_author,
-                app_dir=app_dir or Path(__file__).resolve().parent,
+        if mode == ServerRuntime.USER:
+            self.ctx = RuntimeContext(
+                ctx=create_user_context(
+                    app_name=server_name,
+                    app_author=app_author,
+                    app_dir=app_dir or Path(__file__).resolve().parent,
+                )
             )
-        )
+        else:
+            self.ctx = RuntimeContext(
+                ctx=create_service_context(
+                    app_name=server_name,
+                    app_author=app_author,
+                    app_dir=app_dir or Path(__file__).resolve().parent,
+                )
+            )
+
 
         # -----------------------------
         # Logging setup
@@ -63,7 +79,7 @@ class MCPServer:
                         LogConfig(self.ctx.app_name, log_level="INFO"),
                         force=True,
                         file_log_conf=FileLogConfig(log_file=self.ctx.log_path()),
-                        tee_console=True,
+                        tee_console=False,
                     )
         self.logger = get_logger(server_name)
 
@@ -72,13 +88,7 @@ class MCPServer:
         # -----------------------------
         self.mcp = FastMCP(
                 name=server_name,
-                include_tags={"public", "api"},
-                exclude_tags={"internal", "deprecated"},
-                on_duplicate_tools="error",
-                on_duplicate_resources="warn",
-                on_duplicate_prompts="replace",
-                # strict_input_validation=False,
-                include_fastmcp_meta=False,
+                on_duplicate="error",
             )
 
         # -----------------------------
@@ -88,6 +98,8 @@ class MCPServer:
         self.tools_root = self.lib_root / "tools"
         self.prompts_root = self.lib_root / "prompts"
         self.resources_root = self.lib_root / "resources"
+        self.logger.info("MCPServer initialized with\n\ttools_root=%s,\n\tprompts_root=%s,\n\tresources_root=%s",
+                         self.tools_root, self.prompts_root, self.resources_root)
 
     def purge_server_cache(self, days: int = 1) -> None:
         """ Purge transcript cache files older than `days` days.
@@ -111,30 +123,34 @@ class MCPServer:
             Any error in a file will cause the tools or prompts in that package to be ignored.
             Make sure you trust the code in those packages!
         """
-
-        # Purge old cache files on server startup
-        self.purge_server_cache(days=1)
-        PyRegistrar(
-                        mcp=self.mcp,
-                        app_ctx=self.ctx,
-                        module_dir=self.tools_root,
-                    ).register()
-        self.logger.info("Tools registered.")
-
-        PromptRegistrar(
+        try:
+            self.logger.info("Attaching tools, prompts and resources to MCP server...")
+            # Purge old cache files on server startup
+            self.purge_server_cache(days=1)
+            PyRegistrar(
                             mcp=self.mcp,
                             app_ctx=self.ctx,
-                            module_dir=self.prompts_root,
+                            module_dir=self.tools_root,
                         ).register()
-        self.logger.info("Prompt functions registered.")
-        self.logger.info("Markdown files parsed and prompts registered.")
+            self.logger.info("Tools registered.")
 
-        ResourcesRegistrar(
+            PromptRegistrar(
                                 mcp=self.mcp,
                                 app_ctx=self.ctx,
-                                module_dir=self.resources_root,
+                                module_dir=self.prompts_root,
                             ).register()
-        self.logger.info("Resources registered.")
+            self.logger.info("Prompt functions registered.")
+            self.logger.info("Markdown files parsed and prompts registered.")
+
+            ResourcesRegistrar(
+                                    mcp=self.mcp,
+                                    app_ctx=self.ctx,
+                                    module_dir=self.resources_root,
+                                ).register()
+            self.logger.info("Resources registered.")
+        except Exception as exc:
+            self.logger.error("Error attaching tools, prompts or resources: %s", exc)
+            raise SystemExit(f"Error attaching tools, prompts or resources: {exc}") from exc
 
 
     def run(self, host:str="127.0.0.1", port:int=8085) -> None:
@@ -142,10 +158,14 @@ class MCPServer:
             The entry point to start the FastMCP server. 
             Launch the FastMCP server with all tools and prompts attached. 
         """
-        self.logger.info("mcp_server starting.")
-        self.attach_everything()
-        self.mcp.run(transport="http", host=host, port=port)
-        self.logger.info("MCP Server started on http://%s:%d", host, port)
+        try:
+            self.logger.info("mcp_server config tools, prompts, and templates.")
+            self.attach_everything()
+            self.logger.info("MCP Server starting on http://%s:%d", host, port)
+            self.mcp.run(transport="http", host=host, port=port)
+        except Exception as exc:
+            self.logger.error("Error running MCP server: %s", exc)
+            raise SystemExit(f"Error running MCP server: {exc}") from exc
 
 # -----------------------------
 # CLI (kept as before)
@@ -162,19 +182,43 @@ def port_type(value: str) -> int:
         raise argparse.ArgumentTypeError(f"Port number must be between 1 and 65535 (got {port})")
     return port
 
+
+def launch(
+        mode: ServerRuntime = ServerRuntime.USER,
+        host: str = "127.0.0.1",
+        port: int = 8085,
+    ) ->None:
+    """ 20260517 MMH launch_server
+        Launch the MCP server with the given mode, host and port.
+        Used within a python module or script to start the server without using the CLI.
+        Args:
+            mode (ServerRuntime): The runtime mode for the server (USER or SERVICE).
+            host (str): The host name or IP address to bind to (default "127.0.0.1").
+            port (int): The TCP port to bind to (default 8085).
+    """
+    server = MCPServer(mode=mode)
+    server.run(host, port)
+
 def main() -> None:
     """ 20251101 MMH main
         Main entry point when launched "stand alone" 
         Parse arguments and start the server. 
     """
     parser = argparse.ArgumentParser(description="Create and run an MCP server.")
+    parser.add_argument(
+        "--runtime",
+        type=str.lower,
+        choices=[r.value for r in ServerRuntime],
+        default=ServerRuntime.USER.value,
+        help="Runtime mode for the MCP server: user or service.",
+    )
     parser.add_argument("--host", type=str, default="127.0.0.1",
                         help="Host name or IP address (default 127.0.0.1).")
     parser.add_argument("--port", type=port_type, default=8085,
                         help="TCP port to bind/connect (default 8085).")
     args = parser.parse_args()
 
-    server = MCPServer()
+    server = MCPServer(mode=args.runtime)
 
     server.run(args.host, args.port)
 

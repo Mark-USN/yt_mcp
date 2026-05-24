@@ -19,37 +19,30 @@ import argparse
 import asyncio
 import subprocess
 import signal
-import logging
 from pathlib import Path
-from yt_lib.utils.log_utils import (
-   LogConfig,
-   FileLogConfig,
-   configure_logging,
-   get_logger,
-   log_tree
-)
+import yt_lib.utils.log_utils as log_utils
 from yt_lib.utils.app_context import RuntimeContext, create_user_context
 from lib.mcp_servers import mcp_server
+from lib.mcp_servers.mcp_server import ServerRuntime
 from lib.mcp_clients.universal_client import UniversalClient
 
 ctx = RuntimeContext(
-    create_user_context(
+    ctx=create_user_context(
         app_name="yt_mcp",
         app_author="HenCode",
         app_dir=Path(__file__).parent.resolve(),
     )
 )
-
 # -----------------------------
 # Logging setup
 # -----------------------------
-configure_logging(
-                LogConfig(ctx.app_name, log_level="INFO"),
-                file_log_conf=FileLogConfig(log_file=ctx.log_path()),
+log_utils.configure_logging(
+                log_utils.LogConfig(ctx.app_name, log_level="INFO"),
+                file_log_conf=log_utils.FileLogConfig(log_file=ctx.log_path()),
                 force=True,
                 tee_console=True,
             )
-logger = get_logger(__name__)
+logger = log_utils.get_logger(__name__)
 
 # ---- Helper to find pythonw.exe on Windows ----
 # On Windows, we want to use pythonw.exe to avoid a console window popping up.
@@ -76,10 +69,17 @@ def start_server(host: str, port: int, debug: bool):
         depending on the debug flag. False will launch a detached process.
         20251214 MMH: Added mode parameter to select between demo_server and long_job_server.
     """
+    server_pid_file = ctx.cache_dir / "mcp.pid" if isinstance(ctx.cache_dir, Path) else \
+                        Path(f"{ctx.cache_dir}/mcp.pid")
+    svr_log = ctx.log_dir / "mcp_server.log" if isinstance(ctx.log_dir, Path) else \
+                Path(f"{ctx.log_dir}/mcp_server.log")
 
+    runtime = ServerRuntime.USER
+    logger.info("Starting MCP server with runtime=%s, host=%s, port=%i, debug=%s",
+                runtime, host, port, debug)
     if debug:
         # Launch the server in the current process (foreground) for debugging.
-        mcp_server.launch_server(host, port)
+        mcp_server.launch(runtime, host, port)
         return
 
     # --- Detached mode ---
@@ -90,19 +90,17 @@ def start_server(host: str, port: int, debug: bool):
     # -------------------------------------------------------------
     # Paths for server PID & LOG files (used in detached mode)
     # -------------------------------------------------------------
-    server_pid_file = ctx.cache_dir / "mcp.pid" if isinstance(ctx.cache_dir, Path) else \
-                        Path(f"{ctx.cache_dir}/mcp.pid")
-    svr_log = ctx.log_dir / "mcp_server.log" if isinstance(ctx.log_dir, Path) else \
-                Path(f"{ctx.log_dir}/mcp_server.log")
-
-
-    # Command line to run the server module
+    # Command line to run the server module as a separate process.  Launched through the 'if
+    # __name__ == "__main__"' guard in mcp_server.py, which calls main() with the appropriate
+    # arguments.
+    
     cmd_str = "lib.mcp_servers.mcp_server"
 
     cmd = [
         _pythonw_exe(),
         "-m",
         cmd_str,
+        "--runtime", runtime.value,
         "--host", host,
         "--port", str(port),
     ]
@@ -110,15 +108,15 @@ def start_server(host: str, port: int, debug: bool):
     # Platform-specific detachment options
     kwargs: dict = {}
     if os.name == "nt":
-        flags = subprocess.DETACHED_PROCESS
+        flags = (
+            subprocess.CREATE_NO_WINDOW
+            | subprocess.CREATE_NEW_PROCESS_GROUP
+        )
         kwargs["creationflags"] = flags
         # NOTE: no close_fds here on Windows, because of redirected std handles
     else:
-        kwargs["preexec_fn"] = os.setpgrp  # pylint: disable=no-member
+        kwargs["start_new_session"] = True  # pylint: disable=no-member
         kwargs["close_fds"] = True
-    # 20251204 MMH: Ensure log file and pid file exist
-    svr_log.parent.mkdir(parents=True, exist_ok=True)
-    server_pid_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Use `with` for the log file only; the server keeps running after this
     # script exits.
@@ -144,9 +142,9 @@ def start_server(host: str, port: int, debug: bool):
     #   - We only keep and record the PID
     server_pid_file.write_text(str(proc.pid), encoding="utf-8")
     logger.info("Server started (detached) on http://%s:%i.", host, port)
-    log_tree(
+    log_utils.log_tree(
         logger,
-        logging.DEBUG,
+        log_utils.DEBUG,
         "subprocess",
         {
             "pid": proc.pid,
@@ -190,11 +188,9 @@ def stop_server():
         else:
             os.kill(pid, signal.SIGTERM)
             logger.info("ℹ Sent stop signal to PID %i.", pid)
-    except ProcessLookupError as e:
-        logger.error("Process %i not found.", pid)
-        raise SystemExit(f"Process {pid} not found.  Error = {e}") from e
-
-
+    except Exception as exc:
+        logger.error("Process %i not found, error = %s.", pid, exc)
+        # raise SystemExit(f"Process {pid} not found.  Error = {exc}") from e
 
     # Clean up PID file regardless (best-effort)
     # Remove the old PID files if present

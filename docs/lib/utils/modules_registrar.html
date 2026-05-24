@@ -759,7 +759,7 @@ imports them safely, and registers them into an MCP server.</p>
                                         <input id="RegistrarBase.__init__-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
             
-        <span class="name">RegistrarBase</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">mcp</span><span class="p">:</span> <span class="n">fastmcp</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">FastMCP</span>,</span><span class="param">	<span class="n">app_ctx</span><span class="p">:</span> <span class="n">yt_lib</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">app_context</span><span class="o">.</span><span class="n">RuntimeContext</span>,</span><span class="param">	<span class="n">module_dir</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span></span>)</span>
+        <span class="name">RegistrarBase</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">mcp</span><span class="p">:</span> <span class="n">fastmcp</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">FastMCP</span>,</span><span class="param">	<span class="n">app_ctx</span><span class="p">:</span> <span class="n">yt_lib</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">app_context</span><span class="o">.</span><span class="n">RuntimeContext</span>,</span><span class="param">	<span class="n">module_dir</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span></span>)</span>
 
                 <label class="view-source-button" for="RegistrarBase.__init__-view-source"><span>View Source</span></label>
 
@@ -1542,7 +1542,7 @@ Returns:
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">register_markdown_prompt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">md_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+        <span class="name">register_markdown_prompt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">md_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="PromptRegistrar.register_markdown_prompt-view-source"><span>View Source</span></label>
 
@@ -1800,7 +1800,7 @@ register static resource files (e.g. .txt, .json) in the given directory as MCP 
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">register_file_resource</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span>, </span><span class="param"><span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+        <span class="name">register_file_resource</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span>, </span><span class="param"><span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="ResourcesRegistrar.register_file_resource-view-source"><span>View Source</span></label>
 
@@ -1840,7 +1840,7 @@ Args:
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">register_text_resource</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+        <span class="name">register_text_resource</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="ResourcesRegistrar.register_text_resource-view-source"><span>View Source</span></label>
 
@@ -1880,7 +1880,7 @@ Args:
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">register_directory_resource</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+        <span class="name">register_directory_resource</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="ResourcesRegistrar.register_directory_resource-view-source"><span>View Source</span></label>
 

@@ -396,7 +396,7 @@ them from the mcp_service.xml</p>
                     <div class="attr variable">
             <span class="name">ctx</span>        =
 <input id="ctx-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="ctx-view-value"></label><span class="default_value">RuntimeContext(ctx=BaseContext(app_name=&#39;yt_mcp&#39;, app_author=&#39;HenCode&#39;, app_dir=WindowsPath(&#39;C:/Users/mhenw/Source/repos/Mark-USN/yt_mcp/src&#39;), locale=&#39;en_US&#39;, cache_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/yt_mcp/Cache&#39;), config_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/yt_mcp&#39;), data_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/yt_mcp&#39;), state_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/yt_mcp&#39;), log_dir=WindowsPath(&#39;C:/Users/mhenw/AppData/Local/HenCode/yt_mcp/Logs&#39;), documents_dir=WindowsPath(&#39;C:/Users/mhenw/OneDrive/Documents&#39;)))</span>
+            <label class="view-value-button pdoc-button" for="ctx-view-value"></label><span class="default_value">RuntimeContext(ctx=BaseContext(app_name=&#39;yt_mcp&#39;, app_author=&#39;HenCode&#39;, app_dir=WindowsPath(&#39;C:/Users/UserName/Source/repos/Mark-USN/yt_mcp/src&#39;), locale=&#39;en_US&#39;, cache_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/yt_mcp/Cache&#39;), config_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/yt_mcp&#39;), data_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/yt_mcp&#39;), state_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/yt_mcp&#39;), log_dir=WindowsPath(&#39;C:/Users/UserName/AppData/Local/HenCode/yt_mcp/Logs&#39;), documents_dir=WindowsPath(&#39;C:/Users/UserName/OneDrive/Documents&#39;)))</span>
 
         
     </div>
@@ -420,7 +420,7 @@ them from the mcp_service.xml</p>
                 <section id="PROJECT_ROOT">
                     <div class="attr variable">
             <span class="name">PROJECT_ROOT</span>        =
-<span class="default_value">WindowsPath(&#39;C:/Users/mhenw/Source/repos/Mark-USN/yt_mcp&#39;)</span>
+<span class="default_value">WindowsPath(&#39;C:/Users/UserName/Source/repos/Mark-USN/yt_mcp&#39;)</span>
 
         
     </div>
@@ -432,7 +432,7 @@ them from the mcp_service.xml</p>
                 <section id="SERVICE_EXE">
                     <div class="attr variable">
             <span class="name">SERVICE_EXE</span>        =
-<span class="default_value">WindowsPath(&#39;C:/Users/mhenw/Source/repos/Mark-USN/yt_mcp/mcp_service.exe&#39;)</span>
+<span class="default_value">WindowsPath(&#39;C:/Users/UserName/Source/repos/Mark-USN/yt_mcp/mcp_service.exe&#39;)</span>
 
         
     </div>
@@ -618,7 +618,7 @@ running, do nothing.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">read_service_xml_host_port</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">xml_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>:</span></span>
+        <span class="name">read_service_xml_host_port</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">xml_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="read_service_xml_host_port-view-source"><span>View Source</span></label>
 
@@ -671,7 +671,7 @@ Returns:
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">resolve_client_connection</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">arg_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">arg_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">xml_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>:</span></span>
+        <span class="name">resolve_client_connection</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">arg_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">arg_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">xml_path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">_local</span><span class="o">.</span><span class="n">Path</span></span><span class="return-annotation">) -> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="resolve_client_connection-view-source"><span>View Source</span></label>
 
