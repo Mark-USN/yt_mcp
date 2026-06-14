@@ -56,7 +56,7 @@ debug_stub    </h1>
 
                         <div class="docstring"><p>Test stub for running various MCP servers and clients, and other tools
 This is a temporary utility for development and testing purposes.
-Many test can be run directly by calling uv run -m lib.dir.name.</p>
+Many test can be run directly by calling uv run -m.module.dir.name.</p>
 </div>
 
                         <input id="mod-debug_stub-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -66,7 +66,7 @@ Many test can be run directly by calling uv run -m lib.dir.name.</p>
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="sd">    Test stub for running various MCP servers and clients, and other tools</span>
 </span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">    This is a temporary utility for development and testing purposes.</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">    Many test can be run directly by calling uv run -m lib.dir.name.</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">    Many test can be run directly by calling uv run -m.module.dir.name.</span>
 </span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
 </span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="c1"># pylint: disable=import-outside-toplevel</span>
@@ -91,10 +91,10 @@ Many test can be run directly by calling uv run -m lib.dir.name.</p>
 </span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="p">)</span>
 </span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>
 </span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--test&quot;</span><span class="p">,</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;demo-server&quot;</span><span class="p">,</span> <span class="s2">&quot;long-job-server&quot;</span><span class="p">,</span> <span class="s2">&quot;universal-client&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-search&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-audio&quot;</span><span class="p">],</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">,</span> <span class="s2">&quot;mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-search&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-audio&quot;</span><span class="p">],</span>
 </span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
 </span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run as server, long_job_server, client, or stop-server.&quot;</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run as server, mcp-client, yt-search, or yt-audio.&quot;</span>
 </span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>    <span class="p">)</span>
 </span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
 </span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -106,15 +106,15 @@ Many test can be run directly by calling uv run -m lib.dir.name.</p>
 </span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>
 </span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="k">match</span> <span class="n">args</span><span class="o">.</span><span class="n">test</span><span class="p">:</span>
 </span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>        <span class="k">case</span> <span class="s2">&quot;mcp-server&quot;</span><span class="p">:</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">lib.mcp_servers.mcp_server</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">demo</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">modules.mcp_servers.mcp_server</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">demo</span>
 </span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>            <span class="n">demo</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>        <span class="k">case</span> <span class="s2">&quot;universal-client&quot;</span><span class="p">:</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">lib.mcp_clients.universal_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">UniversalClient</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>            <span class="c1"># import lib.mcp_clients.universal_client as uc</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">UniversalClient</span><span class="p">(</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">8085</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>        <span class="k">case</span> <span class="s2">&quot;mcp-client&quot;</span><span class="p">:</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">modules.mcp_clients.mcp_client_gui</span><span class="w"> </span><span class="kn">import</span> <span class="n">McpClientApp</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>            <span class="c1"># import module.mcp_clients.universal_client as uc</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">McpClientApp</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
 </span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>        <span class="k">case</span> <span class="s2">&quot;yt_search&quot;</span><span class="p">:</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">lib.tools.youtube_search</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">yt_search</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>            <span class="c1"># from lib.utils.api_keys import api_vault</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">modules.tools.youtube_search</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">yt_search</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>            <span class="c1"># from modules.utils.api_keys import api_vault</span>
 </span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>            <span class="c1"># api_keys = api_vault()</span>
 </span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>            <span class="c1"># google_key = api_keys.get_value(&quot;GOOGLE_KEY&quot;)</span>
 </span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>            <span class="n">yt_search</span><span class="o">.</span><span class="n">test</span><span class="p">()</span>
@@ -160,10 +160,10 @@ Many test can be run directly by calling uv run -m lib.dir.name.</p>
 </span><span id="debug_stub-27"><a href="#debug_stub-27"><span class="linenos">27</span></a>    <span class="p">)</span>
 </span><span id="debug_stub-28"><a href="#debug_stub-28"><span class="linenos">28</span></a>
 </span><span id="debug_stub-29"><a href="#debug_stub-29"><span class="linenos">29</span></a>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--test&quot;</span><span class="p">,</span>
-</span><span id="debug_stub-30"><a href="#debug_stub-30"><span class="linenos">30</span></a>        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;demo-server&quot;</span><span class="p">,</span> <span class="s2">&quot;long-job-server&quot;</span><span class="p">,</span> <span class="s2">&quot;universal-client&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-search&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-audio&quot;</span><span class="p">],</span>
+</span><span id="debug_stub-30"><a href="#debug_stub-30"><span class="linenos">30</span></a>        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">,</span> <span class="s2">&quot;mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-search&quot;</span><span class="p">,</span> <span class="s2">&quot;yt-audio&quot;</span><span class="p">],</span>
 </span><span id="debug_stub-31"><a href="#debug_stub-31"><span class="linenos">31</span></a>        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
 </span><span id="debug_stub-32"><a href="#debug_stub-32"><span class="linenos">32</span></a>        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="debug_stub-33"><a href="#debug_stub-33"><span class="linenos">33</span></a>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run as server, long_job_server, client, or stop-server.&quot;</span>
+</span><span id="debug_stub-33"><a href="#debug_stub-33"><span class="linenos">33</span></a>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run as server, mcp-client, yt-search, or yt-audio.&quot;</span>
 </span><span id="debug_stub-34"><a href="#debug_stub-34"><span class="linenos">34</span></a>    <span class="p">)</span>
 </span><span id="debug_stub-35"><a href="#debug_stub-35"><span class="linenos">35</span></a>
 </span><span id="debug_stub-36"><a href="#debug_stub-36"><span class="linenos">36</span></a>    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -175,15 +175,15 @@ Many test can be run directly by calling uv run -m lib.dir.name.</p>
 </span><span id="debug_stub-42"><a href="#debug_stub-42"><span class="linenos">42</span></a>
 </span><span id="debug_stub-43"><a href="#debug_stub-43"><span class="linenos">43</span></a>    <span class="k">match</span> <span class="n">args</span><span class="o">.</span><span class="n">test</span><span class="p">:</span>
 </span><span id="debug_stub-44"><a href="#debug_stub-44"><span class="linenos">44</span></a>        <span class="k">case</span> <span class="s2">&quot;mcp-server&quot;</span><span class="p">:</span>
-</span><span id="debug_stub-45"><a href="#debug_stub-45"><span class="linenos">45</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">lib.mcp_servers.mcp_server</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">demo</span>
+</span><span id="debug_stub-45"><a href="#debug_stub-45"><span class="linenos">45</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">modules.mcp_servers.mcp_server</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">demo</span>
 </span><span id="debug_stub-46"><a href="#debug_stub-46"><span class="linenos">46</span></a>            <span class="n">demo</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
-</span><span id="debug_stub-47"><a href="#debug_stub-47"><span class="linenos">47</span></a>        <span class="k">case</span> <span class="s2">&quot;universal-client&quot;</span><span class="p">:</span>
-</span><span id="debug_stub-48"><a href="#debug_stub-48"><span class="linenos">48</span></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">lib.mcp_clients.universal_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">UniversalClient</span>
-</span><span id="debug_stub-49"><a href="#debug_stub-49"><span class="linenos">49</span></a>            <span class="c1"># import lib.mcp_clients.universal_client as uc</span>
-</span><span id="debug_stub-50"><a href="#debug_stub-50"><span class="linenos">50</span></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">UniversalClient</span><span class="p">(</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">8085</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
+</span><span id="debug_stub-47"><a href="#debug_stub-47"><span class="linenos">47</span></a>        <span class="k">case</span> <span class="s2">&quot;mcp-client&quot;</span><span class="p">:</span>
+</span><span id="debug_stub-48"><a href="#debug_stub-48"><span class="linenos">48</span></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">modules.mcp_clients.mcp_client_gui</span><span class="w"> </span><span class="kn">import</span> <span class="n">McpClientApp</span>
+</span><span id="debug_stub-49"><a href="#debug_stub-49"><span class="linenos">49</span></a>            <span class="c1"># import module.mcp_clients.universal_client as uc</span>
+</span><span id="debug_stub-50"><a href="#debug_stub-50"><span class="linenos">50</span></a>            <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">McpClientApp</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">())</span>
 </span><span id="debug_stub-51"><a href="#debug_stub-51"><span class="linenos">51</span></a>        <span class="k">case</span> <span class="s2">&quot;yt_search&quot;</span><span class="p">:</span>
-</span><span id="debug_stub-52"><a href="#debug_stub-52"><span class="linenos">52</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">lib.tools.youtube_search</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">yt_search</span>
-</span><span id="debug_stub-53"><a href="#debug_stub-53"><span class="linenos">53</span></a>            <span class="c1"># from lib.utils.api_keys import api_vault</span>
+</span><span id="debug_stub-52"><a href="#debug_stub-52"><span class="linenos">52</span></a>            <span class="kn">import</span><span class="w"> </span><span class="nn">modules.tools.youtube_search</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">yt_search</span>
+</span><span id="debug_stub-53"><a href="#debug_stub-53"><span class="linenos">53</span></a>            <span class="c1"># from modules.utils.api_keys import api_vault</span>
 </span><span id="debug_stub-54"><a href="#debug_stub-54"><span class="linenos">54</span></a>            <span class="c1"># api_keys = api_vault()</span>
 </span><span id="debug_stub-55"><a href="#debug_stub-55"><span class="linenos">55</span></a>            <span class="c1"># google_key = api_keys.get_value(&quot;GOOGLE_KEY&quot;)</span>
 </span><span id="debug_stub-56"><a href="#debug_stub-56"><span class="linenos">56</span></a>            <span class="n">yt_search</span><span class="o">.</span><span class="n">test</span><span class="p">()</span>

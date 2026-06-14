@@ -19,7 +19,7 @@
 	<!-- What to run -->
 	<executable>C:\Users\mhenw\Source\repos\Mark-USN\yt_mcp\.venv\Scripts\python.exe</executable>
 	<arguments>
-		-m lib.mcp_servers.mcp_server 
+		-m module.mcp_servers.mcp_server 
 		--runtime %YTMCP_RUNTIME% 
 		--host %YTMCP_HOST% 
 		--port %YTMCP_PORT%

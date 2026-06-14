@@ -20,16 +20,16 @@ import asyncio
 import subprocess
 import signal
 from pathlib import Path
-import yt_lib.utils.log_utils as log_utils
+from yt_lib.utils import log_utils
 from yt_lib.utils.app_context import RuntimeContext, create_user_context
-from lib.mcp_servers import mcp_server
-from lib.mcp_servers.mcp_server import ServerRuntime
-from lib.mcp_clients.universal_client import UniversalClient
+from modules.mcp_servers import mcp_server
+from modules.mcp_servers.mcp_server import ServerRuntime
+from modules.mcp_clients.mcp_client_gui import McpClientApp
 
 ctx = RuntimeContext(
     ctx=create_user_context(
         app_name="yt_mcp",
-        app_author="HenCode",
+        app_author="ChickenScratch",
         app_dir=Path(__file__).parent.resolve(),
     )
 )
@@ -38,7 +38,7 @@ ctx = RuntimeContext(
 # -----------------------------
 log_utils.configure_logging(
                 log_utils.LogConfig(ctx.app_name, log_level="INFO"),
-                file_log_conf=log_utils.FileLogConfig(log_file=ctx.log_path()),
+                file_log_conf=log_utils.FileLogConfig(log_file=ctx.log_path),
                 force=True,
                 tee_console=True,
             )
@@ -93,7 +93,7 @@ def start_server(host: str, port: int, debug: bool):
     # Command line to run the server module as a separate process.  Launched through the 'if
     # __name__ == "__main__"' guard in mcp_server.py, which calls main() with the appropriate
     # arguments.
-    
+
     cmd_str = "lib.mcp_servers.mcp_server"
 
     cmd = [
@@ -151,8 +151,8 @@ def start_server(host: str, port: int, debug: bool):
             "args": proc.args,
             "returncode": proc.returncode,
         },
-        collapse_keys={"env"},  # env can be huge/noisy
-        redact_keys={"token", "api_key"},
+        # collapse_keys={"env"},  # env can be huge/noisy
+        # redact_keys={"token", "api_key"},
     )
     logger.info("ℹ    PID: %i.", proc.pid)
     logger.info("ℹ    Log: %s.", svr_log)
@@ -188,7 +188,7 @@ def stop_server():
         else:
             os.kill(pid, signal.SIGTERM)
             logger.info("ℹ Sent stop signal to PID %i.", pid)
-    except Exception as exc:
+    except Exception as exc:                                        # pylint: disable=broad-except
         logger.error("Process %i not found, error = %s.", pid, exc)
         # raise SystemExit(f"Process {pid} not found.  Error = {exc}") from e
 
@@ -250,7 +250,7 @@ def main():
         stop_server()
 
     elif args.mode == "client":
-        client = UniversalClient(args.host, args.port)
+        client = McpClientApp(host=args.host, port=args.port)
         asyncio.run(client.run())
 
 if __name__ == "__main__":

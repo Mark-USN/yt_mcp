@@ -33,12 +33,12 @@ from yt_lib.utils.log_utils import (
    get_logger,
 )
 from yt_lib.utils.app_context import RuntimeContext, create_user_context
-from lib.mcp_clients.universal_client import UniversalClient
+from modules.mcp_clients.mcp_client_gui import McpClientApp
 
 ctx = RuntimeContext(
     create_user_context(
         app_name="yt_mcp",
-        app_author="HenCode",
+        app_author="ChickenScratch",
         app_dir=Path(__file__).parent.resolve(),
     )
 )
@@ -48,7 +48,7 @@ ctx = RuntimeContext(
 # -----------------------------
 configure_logging(
                 LogConfig(ctx.app_name, log_level="INFO"),
-                file_log_conf=FileLogConfig(log_file=ctx.log_path()),
+                file_log_conf=FileLogConfig(log_file=ctx.log_path),
                 force=True,
                 tee_console=True,
             )
@@ -269,7 +269,7 @@ def main():
             # XML config.
             host, port = resolve_client_connection(args.host, args.port,
                                                    Path(ctx.app_dir.parent / "mcp_service.xml"))
-            client = UniversalClient(host, port)
+            client = McpClientApp(host=host, port=port)
             asyncio.run(client.run())
 
         case _:

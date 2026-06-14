@@ -1,7 +1,7 @@
 """
     Test stub for running various MCP servers and clients, and other tools
     This is a temporary utility for development and testing purposes.
-    Many test can be run directly by calling uv run -m lib.dir.name.
+    Many test can be run directly by calling uv run -m.module.dir.name.
 """
 
 # pylint: disable=import-outside-toplevel
@@ -26,10 +26,10 @@ def debug_stub():
     )
 
     parser.add_argument("--test",
-        choices=["demo-server", "long-job-server", "universal-client", "yt-search", "yt-audio"],
+        choices=["server", "mcp-client", "yt-search", "yt-audio"],
         type=str.lower,
         required=True,
-        help="Run as server, long_job_server, client, or stop-server."
+        help="Run as server, mcp-client, yt-search, or yt-audio."
     )
 
     args = parser.parse_args()
@@ -41,15 +41,15 @@ def debug_stub():
 
     match args.test:
         case "mcp-server":
-            import lib.mcp_servers.mcp_server as demo
+            import modules.mcp_servers.mcp_server as demo
             demo.main()
-        case "universal-client":
-            from lib.mcp_clients.universal_client import UniversalClient
-            # import lib.mcp_clients.universal_client as uc
-            asyncio.run(UniversalClient("127.0.0.1", 8085).run())
+        case "mcp-client":
+            from modules.mcp_clients.mcp_client_gui import McpClientApp
+            # import module.mcp_clients.universal_client as uc
+            asyncio.run(McpClientApp().run())
         case "yt_search":
-            import lib.tools.youtube_search as yt_search
-            # from lib.utils.api_keys import api_vault
+            import modules.tools.youtube_search as yt_search
+            # from modules.utils.api_keys import api_vault
             # api_keys = api_vault()
             # google_key = api_keys.get_value("GOOGLE_KEY")
             yt_search.test()

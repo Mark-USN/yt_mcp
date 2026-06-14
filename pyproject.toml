@@ -1,6 +1,6 @@
 [project]
 name = "yt_mcp"
-version = "0.1.5"
+version = "0.1.7"
 description = "Add your description here"
 readme = "README.md"
 # Optional but recommended: cap at <3.13 so uv doesn't try to solve for 3.13+
@@ -14,7 +14,7 @@ dependencies = [
     "python-frontmatter>=1.1.0",
     "torch>=2.9.1",
     "torchvision>=0.24.1",
-    "yt_lib @ git+https://github.com/Mark-USN/yt_lib.git",
+    "yt-lib @ git+https://github.com/Mark-USN/yt_lib.git",
     "youtube-transcript-api>=1.2.3",
     "yt-dlp>=2025.10.22",
     "mypy>=1.20.2",

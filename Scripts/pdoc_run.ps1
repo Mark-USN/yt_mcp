@@ -1,5 +1,5 @@
 Set-Location $PSScriptRoot\..
 $env:PYTHONPATH = ".\src"
-pdoc YT_MCP_Readme yt_mcp yt_mcp_service debug_stub lib -o .\docs
+pdoc readme yt_mcp yt_mcp_service debug_stub modules -o .\docs
 
 .\Scripts\remove-usernames.ps1
