@@ -1,6 +1,6 @@
 [project]
 name = "yt_mcp"
-version = "0.1.7"
+version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
 # Optional but recommended: cap at <3.13 so uv doesn't try to solve for 3.13+
@@ -35,7 +35,7 @@ torchvision = [
     { index = "pytorch-cu128" },
 ]
 yt-lib = [
-    { path = "C:/Users/mhenw/Source/repos/Mark-USN/yt_lib" },
-#     { git = "https://github.com/Mark-USN/yt_lib.git", rev = "main" },
+#     { path = "C:/Users/mhenw/Source/repos/Mark-USN/yt_lib" },
+    { git = "https://github.com/Mark-USN/yt_lib.git", rev = "main" },
 ]
 
