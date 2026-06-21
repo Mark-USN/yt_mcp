@@ -5,17 +5,19 @@ from __future__ import annotations
 import sys
 import argparse
 from pathlib import Path
+from collections.abc import Callable
 
 import tkinter as tk
 from tkinter import ttk
 
-from yt_lib.utils.app_context import RuntimeContext, create_user_context
+from yt_lib.utils.app_info import RuntimeInfo, create_user_info
 from modules.mcp_clients.client_mods.mcp_client import McpClient
 from modules.mcp_clients.client_mods.tk_async import AsyncTkBridge
 from modules.mcp_clients.client_mods.gui.output_section import OutputSection
 from modules.mcp_clients.client_mods.gui.connection_section import ConnectionSection
 from modules.mcp_clients.client_mods.gui.main_frame import MainFrame
 
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 class McpClientFrame(ttk.Frame):
     """ Main GUI Frame for the MCP Client application. Contains the connection section, output
         section, and main controls frame which includes the ping, prompt, search, and transcript
@@ -33,8 +35,8 @@ class McpClientFrame(ttk.Frame):
         self.root = parent
         self.async_bridge = AsyncTkBridge()
         self.client: McpClient | None = None
-        self.ctx = RuntimeContext(
-                ctx=create_user_context(
+        self.info = RuntimeInfo(
+                info=create_user_info(
                     app_name="MCP GUI Client",
                     app_author="ChickenScratch",
                     app_dir=Path(__file__).resolve().parent,
@@ -54,28 +56,35 @@ class McpClientFrame(ttk.Frame):
 
         Layout:
 
+        New layout:
+
             self
             ├── connection_frame    row 0
-            ├── main_frame       row 1
-            |    ├── ping_frame      row 0
-            |    ├── listings_frame  row 1
-            |    └── examples_frame  row 2
-            |           ├── prompt_frame     row 0
-            |           ├── search_frame     row 1
-            |           └── transcript_frame row 2
-            └── output_frame         row 3
+            ├── main_frame          row 1
+            |     col 0                                     col 1
+            |       ├── ping_frame        row 0               ├── transcript_frame row 0
+            |       ├── listings_frame    row 1               └── audio_transcript_frame row 3
+            |       ├── prompt_frame      row 2
+            |       └── search_frame      row 3 
+            |           
+            └── output_frame        row 2
+
         """
 
         self.grid(row=0, column=0, sticky="nsew")
 
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(3, weight=1)
 
         # Build the OutputSection first, since the main GUI and other sections need self.output.
         self.output_section = OutputSection(
                         parent = self,
                         root = self.root,
-                        start_row = 3,
+                        row = 2,
+                        column = 0,
+                        rowspan = 1,
+                        columnspan = 1,
+                        sticky = "ew",
                     )
         self.output = self.output_section.output
 
@@ -83,7 +92,7 @@ class McpClientFrame(ttk.Frame):
         self.connection_section = ConnectionSection(
                                 parent = self,
                                 root = self.root,
-                                start_row = 0,
+                                row = 0,
                                 host = host,
                                 port = port,
                                 async_bridge = self.async_bridge,
@@ -91,12 +100,12 @@ class McpClientFrame(ttk.Frame):
                                 on_connected = self._on_connected,
                                 on_disconnected = self._on_disconnected
                             )
- 
+
         self.main_frame = MainFrame(
                                 parent = self,
                                 root = self.root,
-                                ctx = self.ctx,
-                                start_row = 1,
+                                info = self.info,
+                                row = 1,
                                 async_bridge = self.async_bridge,
                                 output = self.output,
                                 get_client = self.get_client,
@@ -122,9 +131,33 @@ class McpClientFrame(ttk.Frame):
         self.client = None
         self.main_frame.set_gui_state(False)
 
+    def close(self, on_closed: Callable[[], None]) -> None:
+        """Cleanly shut down GUI-owned resources before Tk exits.
+            Args:
+                on_closed: A callable to call after resources are closed.
+        """
+
+        client = self.client
+        self.client = None
+
+        if client is not None:
+            self.async_bridge.submit(
+                client.close(),
+                on_done=lambda _result: self._finish_close(on_closed),
+                on_error=lambda exc: self._finish_close(on_closed),
+                tk_after=self.root.after,
+            )
+        else:
+            self._finish_close(on_closed)
 
 
-
+    def _finish_close(self, on_closed: Callable[[], None]) -> None:
+        """ Finish closing resources and call the on_closed callback.
+            Args:
+                on_closed: A callable to call after resources are closed.
+        """
+        self.async_bridge.close()
+        on_closed()
 
 
 class McpClientApp:
@@ -137,7 +170,6 @@ class McpClientApp:
         host: str = "127.0.0.1",
         port: int = 8085,
         # auto_connect: bool = False,
-        geometry: str = "1000x700",
     ) -> None:
         """ Initialize the MCP Client application. 
             Args:
@@ -147,7 +179,6 @@ class McpClientApp:
         """
         self.root = tk.Tk()
         self.root.title("MCP Client")
-        self.root.geometry(geometry)
 
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
@@ -158,11 +189,45 @@ class McpClientApp:
             port=port,
             # auto_connect=auto_connect,
         )
-        self.frame.grid(row=0, column=0, sticky="nsew")
+        # self.frame.grid(row=0, column=0, sticky="nsew")
+        self.set_initial_geometry()
+
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
+
+
+    def set_initial_geometry(self) -> None:
+        """Size the window to fit its requested contents, limited by screen size."""
+
+        self.root.update_idletasks()
+
+        req_width = self.root.winfo_reqwidth()
+        req_height = self.root.winfo_reqheight()
+
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        max_width = int(screen_width * 0.90)
+        max_height = int(screen_height * 0.90)
+
+        width = min(req_width, max_width)
+        height = min(req_height, max_height)
+
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+        self.root.minsize(min(req_width, max_width), min(req_height, max_height))
+
 
     def run(self) -> None:
         """ Start the Tk main loop. """
         self.root.mainloop()
+
+    def close(self) -> None:
+        """ Cleanly shut down the application by closing the main frame and then destroying the
+            root Tk window.
+        """
+        self.frame.close(self.root.destroy)
 
 
 def port_type(value: str) -> int:

@@ -32,11 +32,11 @@ from yt_lib.utils.log_utils import (
    configure_logging,
    get_logger,
 )
-from yt_lib.utils.app_context import RuntimeContext, create_user_context
+from yt_lib.utils.app_info import RuntimeInfo, create_user_info
 from modules.mcp_clients.mcp_client_gui import McpClientApp
 
-ctx = RuntimeContext(
-    create_user_context(
+info = RuntimeInfo(
+    create_user_info(
         app_name="yt_mcp",
         app_author="ChickenScratch",
         app_dir=Path(__file__).parent.resolve(),
@@ -47,8 +47,8 @@ ctx = RuntimeContext(
 # Logging setup
 # -----------------------------
 configure_logging(
-                LogConfig(ctx.app_name, log_level="INFO"),
-                file_log_conf=FileLogConfig(log_file=ctx.log_path),
+                LogConfig(info.app_name, log_level="WARNING"),
+                file_log_conf=FileLogConfig(log_file=info.log_path),
                 force=True,
                 tee_console=True,
             )
@@ -56,7 +56,7 @@ logger = get_logger(__name__)
 
 # Where to find the service wrapper executable and XML config,
 # the wrapper is responsible for installing
-PROJECT_ROOT = Path(ctx.app_dir.parent).resolve()
+PROJECT_ROOT = Path(info.app_dir.parent).resolve()
 SERVICE_EXE = PROJECT_ROOT / "mcp_service.exe"
 
 
@@ -123,29 +123,30 @@ def service_status() -> str:
     return run_service_command("status")
 
 def ensure_server_service_running() -> None:
-    """ Ensure that the MCP server service is installed and running. If the service is not
-        installed, install it. If it is installed but not running, start it. If it is already
-        running, do nothing.
-    """
+    """Ensure that the MCP server service is installed and running."""
     status = service_status()
 
     if "NonExistent" in status:
-        run_service_command("install")
-        # If started in 'manual' mode, the service will not start automatically after
-        # installation, so start it explicitly.
-        # run_service_command("start")
-        return
+        install_output = run_service_command("install")
+        logger.info("Service install result: %s", install_output)
 
-    if "Stopped" in status:
-        run_service_command("start")
-        return
+        start_output = run_service_command("start")
+        logger.info("Service start result: %s", start_output)
 
-    if "Started" in status:
+    elif "Stopped" in status:
+        start_output = run_service_command("start")
+        logger.info("Service start result: %s", start_output)
+
+    elif "Started" in status:
         logger.info("MCP server service is already running.")
         return
 
-    raise RuntimeError(f"Unexpected service status: {status}")
+    else:
+        raise RuntimeError(f"Unexpected service status before start: {status}")
 
+    final_status = service_status()
+    if "Started" not in final_status:
+        raise RuntimeError(f"Service did not start successfully. Status: {final_status}")
 
 def read_service_xml_host_port(xml_path: Path) -> tuple[str | None, int | None]:
     """ Read the host and port configuration from the service XML file.
@@ -268,9 +269,9 @@ def main():
             # For the client, resolve host and port from command line arguments or service
             # XML config.
             host, port = resolve_client_connection(args.host, args.port,
-                                                   Path(ctx.app_dir.parent / "mcp_service.xml"))
+                                                   Path(info.app_dir.parent / "mcp_service.xml"))
             client = McpClientApp(host=host, port=port)
-            asyncio.run(client.run())
+            client.run()
 
         case _:
             # This should not happen due to argparse choices, but include it for completeness.

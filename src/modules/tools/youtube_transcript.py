@@ -27,16 +27,15 @@ from collections.abc import Sequence
 from fastmcp import FastMCP  # pylint: disable=unused-import
 from yt_lib.utils.log_utils import get_logger
 from yt_lib.yt_types import Snippet
-from yt_lib import yt_transcript
-from yt_lib.yt_transcript import yt_json
-from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.yt_transcript import yt_json, TranscriptPaths, set_info
+from yt_lib.utils.app_info import RuntimeInfo
 
 logger = get_logger(__name__)
 
 T = TypeVar("T", bound="FastMCP")
 
 def youtube_json(
-    url_or_id: str,
+    url: str,
     prefer_langs: Sequence[str] | None = None,
 ) -> list[Snippet] | None:
     """Return the raw transcript snippets (typed), or None.
@@ -46,7 +45,7 @@ def youtube_json(
     TranscriptSnippet dicts), without JSON serialization.
 
     Args:
-        url_or_id: YouTube URL or video id.
+        url: YouTube URL or video id.
         prefer_langs: Preferred language codes (descending priority).
 
     Returns:
@@ -54,16 +53,21 @@ def youtube_json(
 
     """
     return yt_json(
-        url_or_id=url_or_id,
+        url=url,
         prefer_langs=prefer_langs
     )
 
 
 
-def register(mcp: T, ctx: RuntimeContext) -> None:
+def register(mcp: T, info: RuntimeInfo) -> None:
     """Register YouTube transcript tools with the MCP instance."""
 
-    yt_transcript.set_context(ctx)
+    paths = TranscriptPaths(
+        transcript_dir=info.transcript_dir,
+    )
+
+    set_info(paths)
+
     logger.debug("Registering YouTube transcript tools")
     mcp.tool(tags={"public", "api"})(youtube_json)
 

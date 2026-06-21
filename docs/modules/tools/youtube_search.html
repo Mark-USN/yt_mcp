@@ -87,7 +87,7 @@
 </span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">TypeVar</span>
 </span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastmcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastMCP</span>                         <span class="c1"># pylint: disable=unused-import</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">yt_lib.utils.app_context</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">yt_lib.utils.app_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeInfo</span>
 </span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">yt_lib.yt_search</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a>    <span class="n">YtOrder</span><span class="p">,</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>    <span class="n">SearchKind</span><span class="p">,</span>
@@ -187,9 +187,9 @@
 </span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>    <span class="p">)</span>
 </span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>
 </span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_ctx</span><span class="p">:</span> <span class="n">RuntimeContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_info</span><span class="p">:</span> <span class="n">RuntimeInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register tools with FastMCP.&quot;&quot;&quot;</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="n">_ctx</span> <span class="o">=</span> <span class="n">parent_ctx</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="n">_info</span> <span class="o">=</span> <span class="n">parent_info</span>
 </span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registering YouTube Search tools&quot;</span><span class="p">)</span>
 </span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>    <span class="n">mcp</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">})(</span><span class="n">youtube_search</span><span class="p">)</span>
 </span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>    <span class="n">mcp</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">})(</span><span class="n">youtube_video_info</span><span class="p">)</span>
@@ -249,7 +249,7 @@
                 <section id="logger">
                     <div class="attr variable">
             <span class="name">logger</span>        =
-<span class="default_value">&lt;Logger <a href="#youtube_search">youtube_search</a> (INFO)&gt;</span>
+<span class="default_value">&lt;Logger <a href="#youtube_search">youtube_search</a> (WARNING)&gt;</span>
 
         
     </div>
@@ -421,15 +421,15 @@
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">register</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">mcp</span><span class="p">:</span> <span class="o">~</span><span class="n">T</span>, </span><span class="param"><span class="n">parent_ctx</span><span class="p">:</span> <span class="n">yt_lib</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">app_context</span><span class="o">.</span><span class="n">RuntimeContext</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+        <span class="name">register</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">mcp</span><span class="p">:</span> <span class="o">~</span><span class="n">T</span>, </span><span class="param"><span class="n">parent_info</span><span class="p">:</span> <span class="n">yt_lib</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">app_info</span><span class="o">.</span><span class="n">RuntimeInfo</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="register-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#register"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="register-113"><a href="#register-113"><span class="linenos">113</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_ctx</span><span class="p">:</span> <span class="n">RuntimeContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="register-113"><a href="#register-113"><span class="linenos">113</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_info</span><span class="p">:</span> <span class="n">RuntimeInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="register-114"><a href="#register-114"><span class="linenos">114</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register tools with FastMCP.&quot;&quot;&quot;</span>
-</span><span id="register-115"><a href="#register-115"><span class="linenos">115</span></a>    <span class="n">_ctx</span> <span class="o">=</span> <span class="n">parent_ctx</span>
+</span><span id="register-115"><a href="#register-115"><span class="linenos">115</span></a>    <span class="n">_info</span> <span class="o">=</span> <span class="n">parent_info</span>
 </span><span id="register-116"><a href="#register-116"><span class="linenos">116</span></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registering YouTube Search tools&quot;</span><span class="p">)</span>
 </span><span id="register-117"><a href="#register-117"><span class="linenos">117</span></a>    <span class="n">mcp</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">})(</span><span class="n">youtube_search</span><span class="p">)</span>
 </span><span id="register-118"><a href="#register-118"><span class="linenos">118</span></a>    <span class="n">mcp</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">})(</span><span class="n">youtube_video_info</span><span class="p">)</span>

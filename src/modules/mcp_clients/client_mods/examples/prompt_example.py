@@ -21,6 +21,7 @@ from modules.mcp_clients.client_mods.output_sink import OutputSink, NullOutputSi
 logger = get_logger(__name__)
 
 
+# pylint: disable=too-few-public-methods
 class PromptExample:
     """Exercise the youtube_query_normalizer MCP prompt."""
 
@@ -40,8 +41,8 @@ class PromptExample:
         self.emit = emit or (lambda _message: None)
 
         tv_cfg = TreeViewConfig()
-        tv_cfg.collapse_keys={"env", "data"}
-        tv_cfg.redact_keys={"token", "api_key"}
+        tv_cfg.add_collapse_keys("env, data")
+        tv_cfg.add_redact_keys("token, api_key")
 
         self.tv = TreeView(tv_cfg)
 
@@ -57,10 +58,12 @@ class PromptExample:
         self.emit("Executing youtube_query_normalizer prompt...")
         logger.info("Executing youtube_query_normalizer prompt")
 
-        mcp_prompt_result: PromptResult = await self.mcp_client.get_prompt(
-            "youtube_query_normalizer",
-            {"search_string": search_string},
-        )
+        async with self.mcp_client:
+            mcp_prompt_result: PromptResult = await self.mcp_client.get_prompt(
+                "youtube_query_normalizer",
+                {"search_string": search_string},
+            )
+
         self.emit(self.tv.render_tree(obj=mcp_prompt_result, title="MCP Prompt Result:"))
 
         llm_messages = prompt_result_messages_to_llm(mcp_prompt_result.messages)

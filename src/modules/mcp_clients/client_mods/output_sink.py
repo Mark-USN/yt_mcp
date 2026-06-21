@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-
+# pylint: disable=too-few-public-methods
 class OutputSink(Protocol):
     """ Protocol representing a callable that can be used to send output messages to a UI or other
         output target.
@@ -14,5 +14,5 @@ class OutputSink(Protocol):
     def __call__(self, message: str = "") -> None:
         """Send a line of output to the current UI/output target."""
 
-
+# pylint: disable=invalid-name
 NullOutputSink: OutputSink = lambda message="": None

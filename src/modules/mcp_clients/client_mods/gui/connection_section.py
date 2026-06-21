@@ -9,7 +9,7 @@ from modules.mcp_clients.client_mods.tk_async import AsyncTkBridge
 from modules.mcp_clients.client_mods.tk_output import TkOutput
 from modules.mcp_clients.client_mods.mcp_client import McpClient
 
-
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 class ConnectionSection(ttk.LabelFrame):
     """ Class for managing the MCP client's GUI connection arguments and connection. """
     client: McpClient | None = None
@@ -19,7 +19,11 @@ class ConnectionSection(ttk.LabelFrame):
         parent: tk.Widget,
         *,
         root: tk.Tk,
-        start_row: int,
+        row: int,
+        column: int = 0,
+        rowspan: int = 1,
+        columnspan: int = 1,
+        sticky: str = "ew",
         host: str,
         port: int,
         async_bridge: AsyncTkBridge,
@@ -31,7 +35,7 @@ class ConnectionSection(ttk.LabelFrame):
             Args:
                 parent: The parent Tk widget.
                 root: The root Tk instance.
-                start_row: The starting row for placing this widget.
+                row: The starting row for placing this widget.
                 host: The default host for the MCP client.
                 port: The default port for the MCP client.
                 async_bridge: The asynchronous bridge for running tasks.
@@ -52,17 +56,38 @@ class ConnectionSection(ttk.LabelFrame):
         self.port_var = tk.StringVar(value=str(port))
         self.connection_status_var = tk.StringVar(value="Not connected")
 
-        self.build_frame(start_row=start_row)
+        self.build_frame(
+            row=row,
+            column=column,
+            rowspan=rowspan,
+            columnspan=columnspan,
+            sticky=sticky,
+        )
 
 
 
-    def build_frame(self, start_row: int) -> None:
+    def build_frame(
+        self,
+        row: int,
+        column: int = 0,
+        rowspan: int = 1,
+        columnspan: int = 1,
+        sticky: str = "ew",
+    ) -> None:
         """ Build the always-enabled server connection GUI controls.
             Args:
-                start_row: The starting row for placing this widget.
+                row: The starting row for placing this widget.
         """
 
-        self.grid(row=start_row, column=0, sticky="ew", padx=8, pady=4)
+        self.grid(
+            row=row,
+            column=column,
+            rowspan=rowspan,
+            columnspan=columnspan,
+            sticky=sticky,
+            padx=8,
+            pady=4,
+        )
         self.columnconfigure(1, weight=1)
         self.rowconfigure(1, weight=1)
 
@@ -97,31 +122,30 @@ class ConnectionSection(ttk.LabelFrame):
             padx=4,
             pady=4,
         )
+        row += 1
+
+        ttk.Label(self, textvariable=self.connection_status_var).grid(
+            row=row,
+            column=0,
+            columnspan=3,
+            sticky="w",
+            padx=4,
+            pady=4,
+        )
 
         ttk.Button(self, text="Connect", command=self.on_connect).grid(
             row=row,
-            column=4,
+            column=2,
             padx=4,
             pady=4,
         )
 
         ttk.Button(self, text="Disconnect", command=self.on_disconnect).grid(
             row=row,
-            column=5,
+            column=3,
             padx=4,
             pady=4,
         )
-        row += 1
-
-        ttk.Label(self, textvariable=self.connection_status_var).grid(
-            row=row,
-            column=0,
-            columnspan=6,
-            sticky="w",
-            padx=4,
-            pady=4,
-        )
-
 
 
     def _parse_port(self) -> int | None:

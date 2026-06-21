@@ -18,7 +18,7 @@ import frontmatter  # pip/uv: python-frontmatter
 from fastmcp import FastMCP
 from fastmcp.resources import FileResource, TextResource, DirectoryResource
 from yt_lib.utils.log_utils import get_logger # , log_tree
-from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.utils.app_info import RuntimeInfo
 
 
 T = TypeVar("T", bound=FastMCP)
@@ -42,18 +42,19 @@ class ModuleImportError(Exception):
 #
 #=================================================
 
+# pylint: disable=too-few-public-methods
 class RegistrarBase:
     """ Base class for different types of registrars (tools, prompts, resources). """
-    def __init__(self, mcp: FastMCP, app_ctx: RuntimeContext, module_dir: Path | str) -> None:
-        """ Initialize the registrar with the MCP server, application context, and module directory.
+    def __init__(self, mcp: FastMCP, app_info: RuntimeInfo, module_dir: Path | str) -> None:
+        """ Initialize the registrar with the MCP server, application info, and module directory.
             Args:
                 mcp (FastMCP): The MCP server instance to register tools/prompts/resources with.
-                app_ctx (RuntimeContext): The runtime context of the application.
+                app_info (RuntimeInfo): The runtime info of the application.
                 module_dir (Path | str): The directory containing the modules to be registered.
         """
         self.mcp_server = mcp
-        self.ctx = app_ctx
-        self.base_dir = app_ctx.app_dir.parents[1].resolve()
+        self.info = app_info
+        self.base_dir = app_info.app_dir.parents[1].resolve()
         self.module_dir = Path(module_dir).resolve()
 
         if not self.module_dir.is_dir():
@@ -86,7 +87,7 @@ class PyRegistrar(RegistrarBase):
             logger.warning("Module %s has no register(mcp) function", module.__name__)
             return
 
-        module.register(self.mcp_server, self.ctx)
+        module.register(self.mcp_server, self.info)
         logger.info("🔧 Registered methods from %s", module.__name__)
 
     def discover_modules(self, package: str) -> List[ModuleType]:
@@ -346,7 +347,7 @@ def {name}({arglist}):
         """ Register all discovered and qualifying .py files with the MCP server and
             parse and register markdown prompts.
         """
-        PyRegistrar(self.mcp_server, self.ctx, self.module_dir).register()
+        PyRegistrar(self.mcp_server, self.info, self.module_dir).register()
         self.register_markdown_prompts()
 
 #=================================================
@@ -431,7 +432,7 @@ class ResourcesRegistrar(RegistrarBase):
         """ Register all .py files and static text resources with the MCP server. """
         PyRegistrar(
             self.mcp_server,
-            self.ctx,
+            self.info,
             self.module_dir,
         ).register()
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Annotated, TypeVar
 from pydantic import Field
 from fastmcp import FastMCP                         # pylint: disable=unused-import
-from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.utils.app_info import RuntimeInfo
 from yt_lib.yt_search import (
     YtOrder,
     SearchKind,
@@ -109,9 +109,9 @@ def youtube_playlist_video_list(
     )
 
 
-def register(mcp: T, parent_ctx: RuntimeContext) -> None:
+def register(mcp: T, parent_info: RuntimeInfo) -> None:
     """Register tools with FastMCP."""
-    _ctx = parent_ctx
+    _info = parent_info
     logger.info("Registering YouTube Search tools")
     mcp.tool(tags={"public", "api"})(youtube_search)
     mcp.tool(tags={"public", "api"})(youtube_video_info)

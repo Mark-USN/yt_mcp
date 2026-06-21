@@ -7,10 +7,12 @@
 from __future__ import annotations
 
 import time
+import json
 from copy import deepcopy
 from typing import Any
 from fastmcp import Client
-from mcp.types import CallToolResult
+from fastmcp.client.client import CallToolResult
+from mcp.types import TextContent
 from openai import AsyncOpenAI
 from yt_lib.utils.log_utils import get_logger
 from yt_lib.utils.tree_view import TreeView, TreeViewConfig
@@ -48,10 +50,32 @@ class SearchExample:
         self.tv = TreeView(tv_cfg)
 
 
+    def filtered_call_tool_result(
+        self,
+        result: CallToolResult,
+        new_data: dict[str, Any],
+    ) -> CallToolResult:
+        """Return a new CallToolResult whose content, structured_content, and data agree."""
+
+        return CallToolResult(
+            content=[
+                TextContent(
+                    type="text",
+                    text=json.dumps(new_data, indent=2, ensure_ascii=False),
+                )
+            ],
+            structured_content=new_data,
+            meta=deepcopy(result.meta),
+            data=new_data,
+            is_error=result.is_error,
+        )
+
+
     async def run(
                     self,
                     search_string: str,
                     max_results:int = MAX_SEARCH_RESULTS,
+                    kinds: str = "video",
         ) -> CallToolResult | None:
         """ Run the YouTube search example without AI query normalization.
             Args:
@@ -66,6 +90,7 @@ class SearchExample:
                         "query": search_string,
                         "order": "relevance",
                         "max_results": max_results,
+                        "kinds": kinds,
                     }
         self.emit("")
         self.emit("Running youtube_search:")
@@ -73,10 +98,11 @@ class SearchExample:
         logger.info("Running youtube_search:")
         start = time.perf_counter()
 
-        search_results: CallToolResult = await self.mcp_client.call_tool(
-                                                                "youtube_search",
-                                                                yt_search_args
-                                                            )
+        async with self.mcp_client:
+            search_results: CallToolResult = await self.mcp_client.call_tool(
+                                                                    "youtube_search",
+                                                                    yt_search_args
+                                                                )
 
         elapsed = time.perf_counter() - start
         # This is the title for treeview rendering of the search results, it includes the query,
@@ -99,6 +125,7 @@ class SearchExample:
                     self,
                     normalized_query: NormalizedQuery,
                     max_results:int = MAX_SEARCH_RESULTS,
+                    kinds: str = "video",
         ) -> CallToolResult | None:
         """ Run the YouTube search example, which includes query normalization with an
             the MCP prompt and the AI agent and post-filtering of the results.
@@ -115,6 +142,7 @@ class SearchExample:
                         "query": normalized_query.query,
                         "order": "relevance",
                         "max_results": max_results,
+                        "kinds": kinds,
                     }
         self.emit("")
         self.emit("Running youtube_search:")
@@ -123,10 +151,11 @@ class SearchExample:
         total_start = time.perf_counter()
         start = total_start
 
-        search_results: CallToolResult = await self.mcp_client.call_tool(
-                                                            "youtube_search",
-                                                            yt_search_args
-                                                        )
+        async with self.mcp_client:
+            search_results: CallToolResult = await self.mcp_client.call_tool(
+                                                                    "youtube_search",
+                                                                    yt_search_args
+                                                                )
         elapsed = time.perf_counter() - start
 
         original_data = search_results.data
@@ -156,23 +185,33 @@ class SearchExample:
 
         start = time.perf_counter()
         self.emit("")
-        self.emit("Post-filtering search results ...")
-        modified_items = post_filter(original_items, normalized_query)
+        self.emit()
+        filtered_items = post_filter(original_items, normalized_query)
         elapsed = time.perf_counter() - start
-        self.emit(self.tv.render_tree(obj=modified_items, title="Post-filtered search results:"))
-        self.emit(f"Post-filtering completed in {elapsed:.2f} seconds.")
-
-        new_data: dict[str, Any] = deepcopy(original_data)
-        new_data["items"] = modified_items
-
-        final_results = search_results.model_copy(
-                            update={
-                                "structuredContent": new_data,
-                            },
-                            deep=True,
+        self.emit(self.tv.render_tree(
+                            obj=filtered_items,
+                            title="Post-filtering search results ..."
                         )
+                )
+        self.emit(f"Post-filtering completed in {elapsed:.2f} seconds.")
+        if filtered_items is None or len(original_items) == len(filtered_items):
+            return search_results
 
 
+
+        self.emit(self.tv.render_tree(
+            obj=filtered_items, title="Post-filtered search results:")
+        )
+
+        final_results =  self.filtered_call_tool_result(
+                                result=search_results,new_data=filtered_items
+                         )
+
+        self.emit(self.tv.render_tree(
+            obj=final_results, title="Final search results after post-filtering:")
+        )
+
+        self.emit("")
         total_elapsed = time.perf_counter() - total_start
         self.emit(f"Total elapsed time: {total_elapsed:.2f} seconds.")
 

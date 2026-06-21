@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from typing import TypeVar
 from fastmcp import FastMCP
-from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.utils.app_info import RuntimeInfo
 from yt_lib.utils.log_utils import get_logger # , log_tree
 
 
@@ -51,10 +51,10 @@ def get_repo_info(owner: str, repo: str) -> str:
         "forks": 48
     })
 
-def register(mcp: T, parent_ctx: RuntimeContext) -> None:
+def register(mcp: T, parent_info: RuntimeInfo) -> None:
     """Register resources with the MCP server instance."""
     logger.info("Registering resources")
-    _ctx=parent_ctx
+    _info=parent_info
 
     mcp.resource("resource://greeting", tags={"public", "api"})(get_greeting)
     mcp.resource("data://config", tags={"public"})(get_config)

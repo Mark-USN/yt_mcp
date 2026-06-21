@@ -18,10 +18,12 @@ from modules.mcp_clients.client_mods.output_sink import OutputSink, NullOutputSi
 
 logger = get_logger(__name__)
 
+# pylint: disable=too-few-public-methods
 class DocumentDirProvider(Protocol):
-    """ Prototype to translate app_context methods into a simple protocol for this module,
-        to avoid a hard dependency on the full app context. 
+    """ Prototype to translate app_info methods into a simple protocol for this module,
+        to avoid a hard dependency on the full app info. 
     """
+    @property
     def document_dir(self) -> Path:
         """ Directory and file name to 'cache' transcripts for a given video ID.
             Args:
@@ -31,6 +33,7 @@ class DocumentDirProvider(Protocol):
                 ID should be cached.
         """
 
+# pylint: disable=too-few-public-methods
 class AudioTranscriptExample:
     """ Example of how to use the MCP client to call a tool that retrieves the audio from a YouTube
         video and transcribes it into text.
@@ -58,7 +61,7 @@ class AudioTranscriptExample:
                 ~/Documents/transcripts output path for transcripts.
         """
         self.mcp_client = mcp_client
-        self.out_path = doc_dir_provider.document_dir() / "transcripts"
+        self.out_path = doc_dir_provider.documents_dir / "transcripts"
         self.out_path.mkdir(parents=True, exist_ok=True)
         self.emit = emit or (lambda _message: None)
 
@@ -80,11 +83,11 @@ class AudioTranscriptExample:
         self.emit("Executing youtube_audio_json transcription...")
 
         start = time.perf_counter()
-        async with self.mcp_client as client:
-            task = await client.call_tool(
+        async with self.mcp_client:
+            task = await self.mcp_client.call_tool(
                                             "youtube_audio_json", 
                                             {
-                                                "url_or_id": video_url,
+                                                "url": video_url,
                                                 "model_name": "small"
                                             },
                                             task=True

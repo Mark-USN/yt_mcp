@@ -16,18 +16,18 @@ import sys
 import os
 import shutil
 import argparse
-import asyncio
+# import asyncio
 import subprocess
 import signal
 from pathlib import Path
 from yt_lib.utils import log_utils
-from yt_lib.utils.app_context import RuntimeContext, create_user_context
+from yt_lib.utils.app_info import RuntimeInfo, create_user_info
 from modules.mcp_servers import mcp_server
 from modules.mcp_servers.mcp_server import ServerRuntime
 from modules.mcp_clients.mcp_client_gui import McpClientApp
 
-ctx = RuntimeContext(
-    ctx=create_user_context(
+info = RuntimeInfo(
+    info=create_user_info(
         app_name="yt_mcp",
         app_author="ChickenScratch",
         app_dir=Path(__file__).parent.resolve(),
@@ -37,8 +37,8 @@ ctx = RuntimeContext(
 # Logging setup
 # -----------------------------
 log_utils.configure_logging(
-                log_utils.LogConfig(ctx.app_name, log_level="INFO"),
-                file_log_conf=log_utils.FileLogConfig(log_file=ctx.log_path),
+                log_utils.LogConfig(info.app_name, log_level="WARNING"),
+                file_log_conf=log_utils.FileLogConfig(log_file=info.log_path),
                 force=True,
                 tee_console=True,
             )
@@ -69,10 +69,10 @@ def start_server(host: str, port: int, debug: bool):
         depending on the debug flag. False will launch a detached process.
         20251214 MMH: Added mode parameter to select between demo_server and long_job_server.
     """
-    server_pid_file = ctx.cache_dir / "mcp.pid" if isinstance(ctx.cache_dir, Path) else \
-                        Path(f"{ctx.cache_dir}/mcp.pid")
-    svr_log = ctx.log_dir / "mcp_server.log" if isinstance(ctx.log_dir, Path) else \
-                Path(f"{ctx.log_dir}/mcp_server.log")
+    server_pid_file = info.cache_dir / "mcp.pid" if isinstance(info.cache_dir, Path) else Path(
+                                                                f"{info.cache_dir}/mcp.pid")
+    svr_log = info.log_dir / "mcp_server.log" if isinstance(info.log_dir, Path) else Path(
+                                                                f"{info.log_dir}/mcp_server.log")
 
     runtime = ServerRuntime.USER
     logger.info("Starting MCP server with runtime=%s, host=%s, port=%i, debug=%s",
@@ -94,7 +94,7 @@ def start_server(host: str, port: int, debug: bool):
     # __name__ == "__main__"' guard in mcp_server.py, which calls main() with the appropriate
     # arguments.
 
-    cmd_str = "lib.mcp_servers.mcp_server"
+    cmd_str = "modules.mcp_servers.mcp_server"
 
     cmd = [
         _pythonw_exe(),
@@ -154,16 +154,16 @@ def start_server(host: str, port: int, debug: bool):
         # collapse_keys={"env"},  # env can be huge/noisy
         # redact_keys={"token", "api_key"},
     )
-    logger.info("ℹ    PID: %i.", proc.pid)
-    logger.info("ℹ    Log: %s.", svr_log)
+    logger.info("PID: %i.", proc.pid)
+    logger.info("Log: %s.", svr_log)
 
 
 def stop_server():
     """ 20251101 MMH stop_server
         Stop a previously started detached server using the PID file.
     """
-    server_pid_file = ctx.cache_dir / "mcp.pid" if isinstance(ctx.cache_dir, Path) else \
-                        Path(f"{ctx.cache_dir}/mcp.pid")
+    server_pid_file = info.cache_dir / "mcp.pid" if isinstance(info.cache_dir, Path) else \
+                        Path(f"{info.cache_dir}/mcp.pid")
 
     if not server_pid_file.exists():
         logger.error("No PID file found; server may not be running.")
@@ -187,7 +187,7 @@ def stop_server():
                            check=True, capture_output=True, text=True)
         else:
             os.kill(pid, signal.SIGTERM)
-            logger.info("ℹ Sent stop signal to PID %i.", pid)
+            logger.info("Sent stop signal to PID %i.", pid)
     except Exception as exc:                                        # pylint: disable=broad-except
         logger.error("Process %i not found, error = %s.", pid, exc)
         # raise SystemExit(f"Process {pid} not found.  Error = {exc}") from e
@@ -251,7 +251,7 @@ def main():
 
     elif args.mode == "client":
         client = McpClientApp(host=args.host, port=args.port)
-        asyncio.run(client.run())
+        client.run()
 
 if __name__ == "__main__":
     # If run as a script, execute main().

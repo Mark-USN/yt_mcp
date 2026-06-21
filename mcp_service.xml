@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <service>
-	<id>mcp_server</id>
+	<id>mcp_service</id>
 	<name>YT MCP Server</name>
 	<description>FastMCP server for finding and retrieving YouTube transcripts</description>
 
@@ -19,17 +19,18 @@
 	<!-- What to run -->
 	<executable>C:\Users\mhenw\Source\repos\Mark-USN\yt_mcp\.venv\Scripts\python.exe</executable>
 	<arguments>
-		-m module.mcp_servers.mcp_server 
+		-m modules.mcp_servers.mcp_server 
 		--runtime %YTMCP_RUNTIME% 
 		--host %YTMCP_HOST% 
 		--port %YTMCP_PORT%
 	</arguments>
 
 	<!-- Starting up -->
-	<!--
-	<startmode>Manual</startmode>
-	-->
+	<!-- Automatic start mode will start the service at system boot, it does not start automatically 
+		 after installation, the user must start it manually the first time. 
 	<startmode>Automatic</startmode>
+	-->
+	<startmode>Manual</startmode>
 
 
 	<!-- Logging -->

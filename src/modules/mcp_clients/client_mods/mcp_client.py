@@ -8,7 +8,7 @@ and exercises known workflows using safe, deterministic arguments.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from mcp.types import CallToolResult
+from fastmcp.client.client import CallToolResult
 from fastmcp import Client
 # from fastmcp.prompts import PromptResult, Message
 # from fastmcp.resources import ResourceResult, ResourceContent
@@ -68,3 +68,7 @@ class McpClient(Client):
                 results["prompts"] = await self.list_prompts()
 
         return results
+
+    async def close(self) -> None:
+        """ Close the MCP client connection. """
+        await self.__aexit__(None, None, None)

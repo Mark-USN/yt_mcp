@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, Final
+from copy import deepcopy
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,20 +65,19 @@ def normalized_query_from_mapping(data: Mapping[str, Any]) -> NormalizedQuery:
 
 
 def post_filter(
-    results: list[dict[str, Any]],
+    data_items: list[dict[str, Any]],
     normalized: NormalizedQuery,
 ) -> list[dict[str, Any]]:
-    """Filter YouTube search results using a normalized query."""
-    filtered: list[dict[str, Any]] = []
+    """ Filter YouTube search results using a normalized query. """
+    filtered_data: list[dict[str, Any]] = []
 
     includes = [term.lower() for term in normalized.includes]
     excludes = [term.lower() for term in normalized.excludes]
     phrases = [phrase.lower() for phrase in normalized.phrases]
-    channels = set(normalized.channels)
 
-    for result in results:
-        title = str(result.get("title") or "").lower()
-        description = str(result.get("description") or "").lower()
+    for video in data_items:
+        title = str(video.get("title") or "").lower()
+        description = str(video.get("description") or "").lower()
         text = f"{title} {description}"
 
         if not all(term in text for term in includes):
@@ -89,10 +89,6 @@ def post_filter(
         if not all(phrase in text for phrase in phrases):
             continue
 
-        channel_title = cast(str, result.get("channel_title") or "")
-        if channels and channel_title not in channels:
-            continue
+        filtered_data.append(deepcopy(video))
 
-        filtered.append(result)
-
-    return filtered
+    return filtered_data

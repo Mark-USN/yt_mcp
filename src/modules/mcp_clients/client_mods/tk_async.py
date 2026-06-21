@@ -42,7 +42,8 @@ class AsyncTkBridge:
             done.
             Args:
                 coro: The coroutine to run.
-                on_done: Callback to be called with the result when the coroutine completes successfully.
+                on_done: Callback to be called with the result when the coroutine completes
+                         successfully.
                 on_error: Callback to be called with the exception if the coroutine raises an error.
                 tk_after: Function to schedule a callback to be run on the Tkinter main thread.
         """
@@ -52,9 +53,9 @@ class AsyncTkBridge:
             try:
                 result = done.result()
             except BaseException as exc:                    # pylint: disable=broad-except
-                tk_after(0, lambda: on_error(exc))
+                tk_after(0, lambda exc=exc: on_error(exc))
             else:
-                tk_after(0, lambda: on_done(result))
+                tk_after(0, lambda result=result: on_done(result))
 
         future.add_done_callback(done_callback)
         return future

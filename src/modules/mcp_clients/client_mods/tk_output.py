@@ -58,8 +58,8 @@ class TkOutput:
         self.text.configure(state="normal")
 
     def section(self, title: str) -> None:
-        """ Write a section header to the output widget. This method should only be called from the main
-            thread.
+        """ Write a section header to the output widget. This method should only be called from
+            the main thread.
             Args:
                 title: The title of the section.
         """
@@ -79,7 +79,7 @@ class TkOutput:
         self._write(f"{message}\n")
 
 
-
+# pylint: disable=too-few-public-methods
 class TkAfterOutputSink:
     """ An output sink that schedules messages to be written to a TkOutput instance in a
         thread-safe manner.

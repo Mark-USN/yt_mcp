@@ -71,7 +71,7 @@
 </span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastmcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastMCP</span>
 </span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastmcp.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Message</span><span class="p">,</span> <span class="n">PromptResult</span> <span class="c1"># ,PromptMessage, TextContent</span>
 </span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">yt_lib.utils.app_context</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">yt_lib.utils.app_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeInfo</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">yt_lib.utils.log_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span> <span class="c1"># , log_tree</span>
 </span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>
 </span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a>
@@ -157,11 +157,11 @@
 </span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>    <span class="p">]</span>
 </span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>
 </span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_ctx</span><span class="p">:</span> <span class="n">RuntimeContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_info</span><span class="p">:</span> <span class="n">RuntimeInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register prompts with the MCP server instance.&quot;&quot;&quot;</span>
 </span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registering prompts&quot;</span><span class="p">)</span>
 </span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>    <span class="n">_ctx</span> <span class="o">=</span> <span class="n">parent_ctx</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>    <span class="n">_info</span> <span class="o">=</span> <span class="n">parent_info</span>
 </span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>    <span class="c1"># YouTube-specific prompt (query normalization)</span>
 </span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>    <span class="n">mcp</span><span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">,</span> <span class="s2">&quot;youtube&quot;</span><span class="p">})(</span><span class="n">youtube_query_normalizer</span><span class="p">)</span>
 </span></pre></div>
@@ -171,7 +171,7 @@
                 <section id="logger">
                     <div class="attr variable">
             <span class="name">logger</span>        =
-<span class="default_value">&lt;Logger yt_mcp.modules.prompts.youtube_prompts (INFO)&gt;</span>
+<span class="default_value">&lt;Logger yt_mcp.modules.prompts.youtube_prompts (WARNING)&gt;</span>
 
         
     </div>
@@ -286,17 +286,17 @@ Returns:
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">register</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">mcp</span><span class="p">:</span> <span class="o">~</span><span class="n">T</span>, </span><span class="param"><span class="n">parent_ctx</span><span class="p">:</span> <span class="n">yt_lib</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">app_context</span><span class="o">.</span><span class="n">RuntimeContext</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+        <span class="name">register</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">mcp</span><span class="p">:</span> <span class="o">~</span><span class="n">T</span>, </span><span class="param"><span class="n">parent_info</span><span class="p">:</span> <span class="n">yt_lib</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">app_info</span><span class="o">.</span><span class="n">RuntimeInfo</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="register-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#register"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="register-97"><a href="#register-97"><span class="linenos"> 97</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_ctx</span><span class="p">:</span> <span class="n">RuntimeContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="register-97"><a href="#register-97"><span class="linenos"> 97</span></a><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">mcp</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="n">parent_info</span><span class="p">:</span> <span class="n">RuntimeInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="register-98"><a href="#register-98"><span class="linenos"> 98</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register prompts with the MCP server instance.&quot;&quot;&quot;</span>
 </span><span id="register-99"><a href="#register-99"><span class="linenos"> 99</span></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Registering prompts&quot;</span><span class="p">)</span>
 </span><span id="register-100"><a href="#register-100"><span class="linenos">100</span></a>
-</span><span id="register-101"><a href="#register-101"><span class="linenos">101</span></a>    <span class="n">_ctx</span> <span class="o">=</span> <span class="n">parent_ctx</span>
+</span><span id="register-101"><a href="#register-101"><span class="linenos">101</span></a>    <span class="n">_info</span> <span class="o">=</span> <span class="n">parent_info</span>
 </span><span id="register-102"><a href="#register-102"><span class="linenos">102</span></a>    <span class="c1"># YouTube-specific prompt (query normalization)</span>
 </span><span id="register-103"><a href="#register-103"><span class="linenos">103</span></a>    <span class="n">mcp</span><span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="s2">&quot;api&quot;</span><span class="p">,</span> <span class="s2">&quot;youtube&quot;</span><span class="p">})(</span><span class="n">youtube_query_normalizer</span><span class="p">)</span>
 </span></pre></div>

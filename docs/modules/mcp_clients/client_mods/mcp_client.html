@@ -69,6 +69,9 @@
                         <li>
                                 <a class="function" href="#McpClient.list_selected">list_selected</a>
                         </li>
+                        <li>
+                                <a class="function" href="#McpClient.close">close</a>
+                        </li>
                 </ul>
 
             </li>
@@ -108,7 +111,7 @@ and exercises known workflows using safe, deterministic arguments.</p>
 </span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>
 </span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallToolResult</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastmcp.client.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallToolResult</span>
 </span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastmcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 </span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="c1"># from fastmcp.prompts import PromptResult, Message</span>
 </span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="c1"># from fastmcp.resources import ResourceResult, ResourceContent</span>
@@ -168,6 +171,10 @@ and exercises known workflows using safe, deterministic arguments.</p>
 </span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a>                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;prompts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_prompts</span><span class="p">()</span>
 </span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a>
 </span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a>        <span class="k">return</span> <span class="n">results</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>
+</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Close the MCP client connection. &quot;&quot;&quot;</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -334,6 +341,10 @@ and exercises known workflows using safe, deterministic arguments.</p>
 </span><span id="McpClient-69"><a href="#McpClient-69"><span class="linenos">69</span></a>                <span class="n">results</span><span class="p">[</span><span class="s2">&quot;prompts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_prompts</span><span class="p">()</span>
 </span><span id="McpClient-70"><a href="#McpClient-70"><span class="linenos">70</span></a>
 </span><span id="McpClient-71"><a href="#McpClient-71"><span class="linenos">71</span></a>        <span class="k">return</span> <span class="n">results</span>
+</span><span id="McpClient-72"><a href="#McpClient-72"><span class="linenos">72</span></a>
+</span><span id="McpClient-73"><a href="#McpClient-73"><span class="linenos">73</span></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="McpClient-74"><a href="#McpClient-74"><span class="linenos">74</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Close the MCP client connection. &quot;&quot;&quot;</span>
+</span><span id="McpClient-75"><a href="#McpClient-75"><span class="linenos">75</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -409,7 +420,7 @@ Args:
 <div class="attr function">
             
         <span class="def">async def</span>
-        <span class="name">list_selected</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">selected</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">mcp</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">CallToolResult</span><span class="p">]</span>:</span></span>
+        <span class="name">list_selected</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">selected</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">fastmcp</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">CallToolResult</span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="McpClient.list_selected-view-source"><span>View Source</span></label>
 
@@ -448,6 +459,28 @@ Args:
               "tools", "resources", "templates", and "prompts".
 Returns:
     A dictionary mapping each selected category to its corresponding list of items.</p>
+</div>
+
+
+                            </div>
+                            <div id="McpClient.close" class="classattr">
+                                        <input id="McpClient.close-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">async def</span>
+        <span class="name">close</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="McpClient.close-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#McpClient.close"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="McpClient.close-73"><a href="#McpClient.close-73"><span class="linenos">73</span></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="McpClient.close-74"><a href="#McpClient.close-74"><span class="linenos">74</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Close the MCP client connection. &quot;&quot;&quot;</span>
+</span><span id="McpClient.close-75"><a href="#McpClient.close-75"><span class="linenos">75</span></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Close the MCP client connection.</p>
 </div>
 
 

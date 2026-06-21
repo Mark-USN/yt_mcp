@@ -7,11 +7,15 @@ import json
 from typing import TypeVar
 from dataclasses import asdict
 from fastmcp import FastMCP  # pylint: disable=unused-import
+
 from fastmcp.dependencies import Progress
 from fastmcp.server.tasks import TaskConfig
-from yt_lib.yt_audio_transcript import transcribe_youtube_audio_async, set_context
-from yt_lib.audio.audio_types import AUDIO_SETTINGS # , AudioTranscript
-from yt_lib.utils.app_context import RuntimeContext
+from fastmcp.dependencies import CurrentContext
+from fastmcp.server.context import Context
+from yt_lib.yt_types import Snippet
+from yt_lib.yt_audio_transcript import transcribe_youtube_audio_async, AudioPaths, set_info
+from yt_lib.audio.audio_types import AUDIO_SETTINGS
+from yt_lib.utils.app_info import RuntimeInfo
 from yt_lib.utils.log_utils import get_logger
 
 
@@ -27,6 +31,7 @@ async def youtube_audio_json(
     *,
     model_name: str = AUDIO_SETTINGS.whisper_model,
     progress: Progress = Progress(),
+    mcp_info: Context = CurrentContext()
 ) -> str:
     """ ASYNC variant of the YouTube audio transcript tool that returns JSON.
         This function transcribes the audio of a YouTube video asynchronously and provides
@@ -43,10 +48,11 @@ async def youtube_audio_json(
                this function through the MCP interface.
             2. This function is asynchronous and can be cancelled while transcribing.
     """
+    await mcp_info.info(f"Starting audio transcript for {url}")
     await progress.set_total(100)
     await progress.set_message("Starting YouTube audio transcription")
 
-    transcript = await transcribe_youtube_audio_async(
+    snippets: list[Snippet] = await transcribe_youtube_audio_async(
         url=url,
         model_name=model_name,
         progress_rptr=progress,
@@ -54,7 +60,7 @@ async def youtube_audio_json(
 
     await progress.set_message("Audio transcription tool complete")
     return json.dumps(
-                    [asdict(chunk) for chunk in transcript.chunks],
+                    snippets,
                     ensure_ascii=False,
                     indent=2
                 )
@@ -62,15 +68,19 @@ async def youtube_audio_json(
 
 # ----------------- MCP integration -----------------
 
-def register(mcp: T, ctx: RuntimeContext ) -> None:
+def register(mcp: T, info: RuntimeInfo ) -> None:
     """ Register YouTube to json and text audio tools with the MCP instance as a long job.
         This registers ASYNC variants so the job can be cancelled while transcribing.
         The sync versions remain available for CLI/testing.
         Args:
                 mcp: The MCP instance to register the tools with.
-                ctx: The runtime context to set for the transcription functions.
+                info: The runtime info to set for the transcription functions.
     """
-    set_context(ctx)
+    paths = AudioPaths(
+        audio_dir=info.audio_dir,
+    )
+
+    set_info(paths)
 
     logger.debug("Registering YouTube audio transcript tools (async/cancellable)")
     mcp.tool(tags=["public", "api"], task=TaskConfig(mode="required"))(youtube_audio_json)

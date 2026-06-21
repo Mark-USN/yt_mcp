@@ -13,6 +13,7 @@ from modules.mcp_clients.client_mods.mcp_client import McpClient
 from modules.mcp_clients.client_mods.examples.prompt_example import PromptExample
 from modules.utils.client_prompt_data import NormalizedQuery
 
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 class PromptSection(ttk.LabelFrame):
     """ Class and GUI Frame for running a prompt example and optionally chaining results into a
         search example.
@@ -23,28 +24,34 @@ class PromptSection(ttk.LabelFrame):
         parent: tk.Widget,
         *,
         root: tk.Tk,
-        start_row: int,
+        row: int,
+        column: int = 0,
+        rowspan: int = 1,
+        columnspan: int = 1,
+        sticky: str = "ew",
         async_bridge: AsyncTkBridge,
         output: TkOutput,
         get_client: Callable[[], McpClient | None],
+        on_chain_change: Callable[[bool], None],
         chain_search: Callable[[NormalizedQuery], None],
     ) -> None:
         """ Initialize the PromptSection frame.
             Args:
                 parent: The parent widget.
                 root: The root Tkinter window.
-                start_row: The starting row for placing this widget.
+                row: The starting row for placing this widget.
                 async_bridge: The AsyncTkBridge instance for handling async tasks.
                 output: The TkOutput instance for writing output.
                 get_client: A callable that returns the current MCP client or None.
                 chain_search: A callable that takes the results of the prompt example and runs a
                               search example with them.
         """
-        super().__init__(parent, text="Ping")
+        super().__init__(parent, text="Prompt")
         self.root = root
         self.async_bridge = async_bridge
         self.output = output
         self.get_client = get_client
+        self.on_chain_change = on_chain_change
         self.chain_search = chain_search
 
         self.prompt_search_string_var = tk.StringVar(
@@ -53,37 +60,40 @@ class PromptSection(ttk.LabelFrame):
         self.use_chain_search_var = tk.BooleanVar(value=False)
 
 
-        self.build_frame(start_row=start_row)
+        self.build_frame(
+                            row=row,
+                            column=column,
+                            rowspan=rowspan,
+                            columnspan=columnspan,
+                            sticky=sticky,
+                        )
 
 
-    def build_frame(self, start_row: int) -> None:
+    def build_frame(
+                        self,
+                        row: int,
+                        column: int = 0,
+                        rowspan: int = 1,
+                        columnspan: int = 1,
+                        sticky: str = "ew",
+                    ) -> None:
         """ Build prompt example controls.
             Args:
-                start_row: The starting row for placing this widget.
+                row: The starting row for placing this widget.
         """
-        self.grid(row=start_row, column=0, sticky="ew", padx=8, pady=4)
+        self.grid(
+                    row=row,
+                    column=column,
+                    rowspan=rowspan,
+                    columnspan=columnspan,
+                    sticky=sticky,
+                    padx=8,
+                    pady=4,
+                )
         self.columnconfigure(1, weight=1)
         self.rowconfigure(1, weight=1)
 
         row=0
-        ttk.Separator(self, orient="horizontal").grid(
-            row=row,
-            column=0,
-            columnspan=5,
-            sticky="ew",
-            padx=4,
-            pady=8,
-        )
-        row += 1
-        ttk.Label(self, text="Prompt Example").grid(
-            row=row,
-            column=0,
-            columnspan=5,
-            sticky="w",
-            padx=4,
-            pady=(8, 2),
-        )
-        row += 1
         ttk.Label(self, text="Search string:").grid(
             row=row,
             column=0,
@@ -104,7 +114,7 @@ class PromptSection(ttk.LabelFrame):
 
         ttk.Checkbutton(
             self,
-            text="Chain Prompt resultsinto Search example",
+            text="Link to Search.",
             variable=self.use_chain_search_var,
         ).grid(
             row=row,
@@ -114,6 +124,13 @@ class PromptSection(ttk.LabelFrame):
             padx=4,
             pady=2,
         )
+
+        self.use_chain_search_var.trace_add(
+            "write",
+            self._handle_chain_search_changed,
+        )
+
+
 
         ttk.Button(
             self,
@@ -126,6 +143,14 @@ class PromptSection(ttk.LabelFrame):
             pady=4,
             sticky="e",
         )
+
+
+    def _handle_chain_search_changed(
+                                            self,
+                                            *_args: object,
+                                        ) -> None:
+        self.on_chain_change(self.use_chain_search_var.get())
+
 
 
     def run(self) -> None:
@@ -171,11 +196,10 @@ class PromptSection(ttk.LabelFrame):
         use_chain_search = self.use_chain_search_var.get()
         if use_chain_search and self.chain_search is not None:
             self.chain_search(ai_query_results)
-   
+
     def _on_error(self, error: Exception) -> None:
         """ Handle an error from the prompt example by writing the error message to output.
             Args:
                 error: The exception raised during the prompt example execution.
         """
-        self.output.write(f"Prompt failed: {error}")
-
+        self.output.line(f"Prompt failed: {error}")

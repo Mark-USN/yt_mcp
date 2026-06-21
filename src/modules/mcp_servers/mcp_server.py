@@ -12,6 +12,8 @@ import time
 from pathlib import Path
 from enum import StrEnum, auto
 from fastmcp import FastMCP
+# from fastmcp.dependencies import CurrentContext
+# from fastmcp.server.context import Context
 from yt_lib.utils.log_utils import (
     Logger,
     LogConfig,
@@ -19,14 +21,14 @@ from yt_lib.utils.log_utils import (
     configure_logging,
     get_logger
 )
-from yt_lib.utils.app_context import RuntimeContext, create_user_context, create_service_context
+from yt_lib.utils.app_info import RuntimeInfo, create_user_info, create_service_info
 from modules.utils.modules_registrar import PyRegistrar, PromptRegistrar, ResourcesRegistrar
 
 
 
 class ServerRuntime(StrEnum):
     """ Specifies the runtime mode for the MCP server, which determines the type of application
-        context created. 
+        info created. 
     """
     USER = auto()
     SERVICE = auto()
@@ -37,7 +39,7 @@ class MCPServer:
         their respective packages.
     """
     mcp: FastMCP
-    ctx: RuntimeContext
+    info: RuntimeInfo
     logger: Logger
     lib_root: Path
     tools_root: Path
@@ -55,19 +57,19 @@ class MCPServer:
         ) -> None:
 
         # -----------------------------
-        # context setup
+        # info setup
         # -----------------------------
         if mode == ServerRuntime.USER:
-            self.ctx = RuntimeContext(
-                ctx=create_user_context(
+            self.info = RuntimeInfo(
+                info=create_user_info(
                     app_name=server_name,
                     app_author=app_author,
                     app_dir=app_dir or Path(__file__).resolve().parent,
                 )
             )
         else:
-            self.ctx = RuntimeContext(
-                ctx=create_service_context(
+            self.info = RuntimeInfo(
+                info=create_service_info(
                     app_name=server_name,
                     app_author=app_author,
                     app_dir=app_dir or Path(__file__).resolve().parent,
@@ -79,9 +81,9 @@ class MCPServer:
         # Logging setup
         # -----------------------------
         configure_logging(
-                        LogConfig(self.ctx.app_name, log_level="INFO"),
+                        LogConfig(self.info.app_name, log_level="WARNING"),
                         force=True,
-                        file_log_conf=FileLogConfig(log_file=self.ctx.log_path()),
+                        file_log_conf=FileLogConfig(log_file=self.info.log_path),
                         tee_console=False,
                     )
         self.logger = get_logger(server_name)
@@ -92,12 +94,13 @@ class MCPServer:
         self.mcp = FastMCP(
                 name=server_name,
                 on_duplicate="error",
+                # tasks=True,
             )
 
         # -----------------------------
         # Directory tree setup
         # -----------------------------
-        self.lib_root = lib_root or self.ctx.app_dir.parent
+        self.lib_root = lib_root or self.info.app_dir.parent
         self.tools_root = self.lib_root / "tools"
         self.prompts_root = self.lib_root / "prompts"
         self.resources_root = self.lib_root / "resources"
@@ -112,7 +115,7 @@ class MCPServer:
         """
         cutoff = time.time() - (days * 86400)
 
-        for f in self.ctx.transcript_dir().iterdir():
+        for f in self.info.transcript_dir.iterdir():
             if f.is_file() and f.stat().st_atime < cutoff:
                 f.unlink(missing_ok=True)
 
@@ -133,14 +136,14 @@ class MCPServer:
             self.purge_server_cache(days=1)
             PyRegistrar(
                             mcp=self.mcp,
-                            app_ctx=self.ctx,
+                            app_info=self.info,
                             module_dir=self.tools_root,
                         ).register()
             self.logger.info("Tools registered.")
 
             PromptRegistrar(
                                 mcp=self.mcp,
-                                app_ctx=self.ctx,
+                                app_info=self.info,
                                 module_dir=self.prompts_root,
                             ).register()
             self.logger.info("Prompt functions registered.")
@@ -148,7 +151,7 @@ class MCPServer:
 
             ResourcesRegistrar(
                                     mcp=self.mcp,
-                                    app_ctx=self.ctx,
+                                    app_info=self.info,
                                     module_dir=self.resources_root,
                                 ).register()
             self.logger.info("Resources registered.")

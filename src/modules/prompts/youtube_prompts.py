@@ -7,7 +7,7 @@ from typing import TypeVar
 from fastmcp import FastMCP
 from fastmcp.prompts import Message, PromptResult # ,PromptMessage, TextContent
 from pydantic import Field
-from yt_lib.utils.app_context import RuntimeContext
+from yt_lib.utils.app_info import RuntimeInfo
 from yt_lib.utils.log_utils import get_logger # , log_tree
 
 
@@ -93,10 +93,10 @@ Only produce the JSON object.
     ]
 
 
-def register(mcp: T, parent_ctx: RuntimeContext) -> None:
+def register(mcp: T, parent_info: RuntimeInfo) -> None:
     """Register prompts with the MCP server instance."""
     logger.info("Registering prompts")
 
-    _ctx = parent_ctx
+    _info = parent_info
     # YouTube-specific prompt (query normalization)
     mcp.prompt(tags={"public", "api", "youtube"})(youtube_query_normalizer)

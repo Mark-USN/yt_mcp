@@ -158,8 +158,8 @@
 </span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span>
 </span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>
 </span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Write a section header to the output widget. This method should only be called from the main</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">            thread.</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Write a section header to the output widget. This method should only be called from</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">            the main thread.</span>
 </span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="sd">            Args:</span>
 </span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">                title: The title of the section.</span>
 </span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -179,7 +179,7 @@
 </span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 </span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>
 </span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="c1"># pylint: disable=too-few-public-methods</span>
 </span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="k">class</span><span class="w"> </span><span class="nc">TkAfterOutputSink</span><span class="p">:</span>
 </span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot; An output sink that schedules messages to be written to a TkOutput instance in a</span>
 </span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a><span class="sd">        thread-safe manner.</span>
@@ -265,8 +265,8 @@
 </span><span id="TkOutput-59"><a href="#TkOutput-59"><span class="linenos">59</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">)</span>
 </span><span id="TkOutput-60"><a href="#TkOutput-60"><span class="linenos">60</span></a>
 </span><span id="TkOutput-61"><a href="#TkOutput-61"><span class="linenos">61</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="TkOutput-62"><a href="#TkOutput-62"><span class="linenos">62</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Write a section header to the output widget. This method should only be called from the main</span>
-</span><span id="TkOutput-63"><a href="#TkOutput-63"><span class="linenos">63</span></a><span class="sd">            thread.</span>
+</span><span id="TkOutput-62"><a href="#TkOutput-62"><span class="linenos">62</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Write a section header to the output widget. This method should only be called from</span>
+</span><span id="TkOutput-63"><a href="#TkOutput-63"><span class="linenos">63</span></a><span class="sd">            the main thread.</span>
 </span><span id="TkOutput-64"><a href="#TkOutput-64"><span class="linenos">64</span></a><span class="sd">            Args:</span>
 </span><span id="TkOutput-65"><a href="#TkOutput-65"><span class="linenos">65</span></a><span class="sd">                title: The title of the section.</span>
 </span><span id="TkOutput-66"><a href="#TkOutput-66"><span class="linenos">66</span></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -441,8 +441,8 @@ Args:
     </div>
     <a class="headerlink" href="#TkOutput.section"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="TkOutput.section-61"><a href="#TkOutput.section-61"><span class="linenos">61</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="TkOutput.section-62"><a href="#TkOutput.section-62"><span class="linenos">62</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Write a section header to the output widget. This method should only be called from the main</span>
-</span><span id="TkOutput.section-63"><a href="#TkOutput.section-63"><span class="linenos">63</span></a><span class="sd">            thread.</span>
+</span><span id="TkOutput.section-62"><a href="#TkOutput.section-62"><span class="linenos">62</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot; Write a section header to the output widget. This method should only be called from</span>
+</span><span id="TkOutput.section-63"><a href="#TkOutput.section-63"><span class="linenos">63</span></a><span class="sd">            the main thread.</span>
 </span><span id="TkOutput.section-64"><a href="#TkOutput.section-64"><span class="linenos">64</span></a><span class="sd">            Args:</span>
 </span><span id="TkOutput.section-65"><a href="#TkOutput.section-65"><span class="linenos">65</span></a><span class="sd">                title: The title of the section.</span>
 </span><span id="TkOutput.section-66"><a href="#TkOutput.section-66"><span class="linenos">66</span></a><span class="sd">        &quot;&quot;&quot;</span>
@@ -455,8 +455,8 @@ Args:
 </span></pre></div>
 
 
-            <div class="docstring"><p>Write a section header to the output widget. This method should only be called from the main
-thread.
+            <div class="docstring"><p>Write a section header to the output widget. This method should only be called from
+the main thread.
 Args:
     title: The title of the section.</p>
 </div>

@@ -5,14 +5,14 @@ from __future__ import annotations
 import tkinter as tk
 from collections.abc import Callable
 from tkinter import ttk
-from mcp.types import CallToolResult
+from fastmcp.client.client import CallToolResult
 from modules.mcp_clients.client_mods.tk_async import AsyncTkBridge
 from modules.mcp_clients.client_mods.tk_output import TkOutput
 from modules.mcp_clients.client_mods.mcp_client import McpClient
 
 LIST_TYPES = ("tools", "resources", "templates", "prompts")
 
-
+# pylint: disable=too-many-ancestors
 class ListingSection(ttk.LabelFrame):
     """ Section (Frame)for listing server capabilities like tools, resources, templates, and
         prompts.
@@ -23,7 +23,11 @@ class ListingSection(ttk.LabelFrame):
         parent: tk.Widget,
         *,
         root: tk.Tk,
-        start_row: int,
+        row: int,
+        column: int = 0,
+        rowspan: int = 1,
+        columnspan: int = 1,
+        sticky: str = "ew",
         async_bridge: AsyncTkBridge,
         output: TkOutput,
         get_client: Callable[[], McpClient | None],
@@ -33,7 +37,7 @@ class ListingSection(ttk.LabelFrame):
         Args:
             parent: The parent Tk widget.
             root: The root Tk instance.
-            start_row: The starting row for placing this widget.
+            row: The starting row for placing this widget.
             async_bridge: The asynchronous bridge for running tasks.
             output: The output sink for displaying messages.
             get_client: A callable that returns an MCP client or None.
@@ -47,17 +51,38 @@ class ListingSection(ttk.LabelFrame):
 
         self.grid(row=1, column=0, sticky="ew", padx=8, pady=4)
         self.list_vars = {name: tk.BooleanVar(value=True) for name in LIST_TYPES}
-        self.build_frame(start_row=start_row)
+        self.build_frame(
+                            row=row,
+                            column=column,
+                            rowspan=rowspan,
+                            columnspan=columnspan,
+                            sticky=sticky,
+                        )
 
 
-    def build_frame(self, start_row: int) -> None:
+    def build_frame(
+                        self,
+                        row: int,
+                        column: int = 0,
+                        rowspan: int = 1,
+                        columnspan: int = 1,
+                        sticky: str = "ew",
+                    ) -> None:
         """ Build the GUI's server listing controls.
 
             Args:
-                start_row: The starting row for placing this widget.
+                row: The starting row for placing this widget.
         """
-        self.grid(row=start_row, column=0, sticky="ew", padx=8, pady=4)
-        self.columnconfigure(1, weight=1)
+        self.grid(
+                    row=row,
+                    column=column,
+                    rowspan=rowspan,
+                    columnspan=columnspan,
+                    sticky=sticky,
+                    padx=8,
+                    pady=4,
+                )
+        self.columnconfigure(2, weight=1)
         self.rowconfigure(1, weight=1)
 
         row = 0
@@ -105,10 +130,10 @@ class ListingSection(ttk.LabelFrame):
             command=self.on_list_items,
         ).grid(
             row=row,
-            column=2,
+            column=3,
             padx=4,
             pady=4,
-            sticky="w",
+            sticky="e",
         )
 
     def selected_list_types(self) -> set[str]:
@@ -178,4 +203,4 @@ class ListingSection(ttk.LabelFrame):
 
     def _on_error(self, error: Exception) -> None:
         """ Display an error message in the output pane if the listing query fails. """
-        self.output.write(f"Server Capabilities Listing failed: {error}")
+        self.output.line(f"Server Capabilities Listing failed: {error}")

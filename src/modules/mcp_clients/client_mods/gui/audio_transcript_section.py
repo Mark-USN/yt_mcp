@@ -8,14 +8,14 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 from collections.abc import Callable
-from mcp.types import CallToolResult
-from yt_lib.utils.app_context import RuntimeContext
+from fastmcp.client.client import CallToolResult
+from yt_lib.utils.app_info import RuntimeInfo
 from modules.mcp_clients.client_mods.tk_async import AsyncTkBridge
 from modules.mcp_clients.client_mods.tk_output import TkOutput, TkAfterOutputSink
 from modules.mcp_clients.client_mods.mcp_client import McpClient
 from modules.mcp_clients.client_mods.examples.audio_transcript_example import AudioTranscriptExample
 
-
+# pylint: disable=too-many-ancestors
 class AudioTranscriptSection(ttk.LabelFrame):
     """ Section for running the Audio Transcript example wrapped in a Tk Frame. """
 
@@ -24,8 +24,12 @@ class AudioTranscriptSection(ttk.LabelFrame):
         parent: tk.Widget,
         *,
         root: tk.Tk,
-        ctx: RuntimeContext,
-        start_row: int,
+        info: RuntimeInfo,
+        row: int,
+        column: int = 0,
+        rowspan: int = 1,
+        columnspan: int = 1,
+        sticky: str = "ew",
         async_bridge: AsyncTkBridge,
         output: TkOutput,
         get_client: Callable[[], McpClient | None],
@@ -35,57 +39,58 @@ class AudioTranscriptSection(ttk.LabelFrame):
         Args:
             parent: The parent Tk widget.
             root: The root Tk instance.
-            ctx: The runtime context, providing access to the user's document directory.
-            start_row: The starting row for placing this widget.
+            info: The runtime info, providing access to the user's document directory.
+            row: The starting row for placing this widget.
             async_bridge: The asynchronous bridge for running tasks.
             output: The output sink for displaying messages.
             get_client: A callable that returns an MCP client or None.
         """
         super().__init__(parent, text="Audio to Transcript")
         self.root = root
-        self.ctx = ctx
+        self.info = info
         self.async_bridge = async_bridge
         self.output = output
         self.get_client = get_client
         self.url_var = tk.StringVar(value="")
 
-        self.build_frame(start_row=start_row)
+        self.build_frame(
+            row=row,
+            column=column,
+            rowspan=rowspan,
+            columnspan=columnspan,
+            sticky=sticky,
+        )
 
 
-    def build_frame(self, start_row: int) -> None:
+    def build_frame(
+                        self,
+                        row: int,
+                        column: int = 0,
+                        rowspan: int = 1,
+                        columnspan: int = 1,
+                        sticky: str = "ew",
+                    ) -> None:
         """ Build audio transcript controls.
             Args:
-                start_row: The starting row for placing this widget.
+                row: The starting row for placing this widget.
 
             Note:
                 This frame is inside main_controls, so it starts disabled until connected.
         """
 
-        self.grid(row=start_row, column=0, sticky="ew", padx=8, pady=4)
+        self.grid(
+                    row=row,
+                    column=column,
+                    rowspan=rowspan,
+                    columnspan=columnspan,
+                    sticky=sticky,
+                    padx=8,
+                    pady=4,
+                )
         self.columnconfigure(1, weight=1)
         self.rowconfigure(1, weight=1)
 
         row = 0
-        ttk.Separator(self, orient="horizontal").grid(
-            row=row,
-            column=0,
-            columnspan=5,
-            sticky="ew",
-            padx=4,
-            pady=8,
-        )
-        row += 1
-
-        ttk.Label(self, text="Audio Transcript Example").grid(
-            row=row,
-            column=0,
-            columnspan=5,
-            sticky="w",
-            padx=4,
-            pady=(4, 2),
-        )
-        row += 1
-
         ttk.Label(self, text="URL:").grid(
             row=row,
             column=0,
@@ -138,7 +143,7 @@ class AudioTranscriptSection(ttk.LabelFrame):
 
         example = AudioTranscriptExample(
                                     mcp_client = client,
-                                    doc_dir_provider = self.ctx,
+                                    doc_dir_provider = self.info,
                                     emit=TkAfterOutputSink(self.root, self.output)
                                 )
 
@@ -155,4 +160,4 @@ class AudioTranscriptSection(ttk.LabelFrame):
 
     def _on_error(self, error: Exception) -> None:
         """ Handle errors that occur during the audio transcript example."""
-        self.output.write(f"Transcript failed: {error}")
+        self.output.line(f"Audio transcript failed: {error}")

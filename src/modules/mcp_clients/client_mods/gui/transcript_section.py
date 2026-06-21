@@ -5,14 +5,14 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 from collections.abc import Callable
-from mcp.types import CallToolResult
-from yt_lib.utils.app_context import RuntimeContext
+from fastmcp.client.client import CallToolResult
+from yt_lib.utils.app_info import RuntimeInfo
 from modules.mcp_clients.client_mods.tk_async import AsyncTkBridge
 from modules.mcp_clients.client_mods.tk_output import TkOutput, TkAfterOutputSink
 from modules.mcp_clients.client_mods.mcp_client import McpClient
 from modules.mcp_clients.client_mods.examples.transcript_example import TranscriptExample
 
-
+# pylint: disable=too-many-ancestors, too-many-instance-attributes
 class TranscriptSection(ttk.LabelFrame):
     """ Class Tx Frame containing controls for running the Transcript example. """
 
@@ -21,8 +21,12 @@ class TranscriptSection(ttk.LabelFrame):
         parent: tk.Widget,
         *,
         root: tk.Tk,
-        ctx: RuntimeContext,
-        start_row: int,
+        info: RuntimeInfo,
+        row: int,
+        column: int = 0,
+        rowspan: int = 1,
+        columnspan: int = 1,
+        sticky: str = "ew",
         async_bridge: AsyncTkBridge,
         output: TkOutput,
         get_client: Callable[[], McpClient | None],
@@ -31,56 +35,59 @@ class TranscriptSection(ttk.LabelFrame):
             Args:
                 parent: The parent widget.
                 root: The root Tkinter window.
-                ctx: The runtime context.
-                start_row: The starting row for grid placement.
+                info: The runtime info.
+                row: The starting row for grid placement.
                 async_bridge: The asynchronous bridge for Tkinter.
                 output: The output widget for displaying results.
                 get_client: A callable that returns the MCP client or None.
         """
         super().__init__(parent, text="Transcript")
         self.root = root
-        self.ctx = ctx
+        self.info = info
         self.async_bridge = async_bridge
         self.output = output
         self.get_client = get_client
         self.transcript_urls_var = tk.StringVar(value="")
 
-        self.build_frame(start_row=start_row)
+        self.build_frame(
+                            row=row,
+                            column=column,
+                            rowspan=rowspan,
+                            columnspan=columnspan,
+                            sticky=sticky,
+                        )
 
 
-    def build_frame(self, start_row: int) -> None:
+    def build_frame(
+                        self,
+                        row: int,
+                        column: int = 0,
+                        rowspan: int = 1,
+                        columnspan: int = 1,
+                        sticky: str = "ew",
+                    ) -> None:
         """ Build transcript controls.
             Args:
-                start_row: The starting row for grid placement.
+                row: The starting row for grid placement.
 
             This frame is inside main_controls, so it starts disabled until connected.
         """
-        self.grid(row=start_row, column=0, sticky="ew", padx=8, pady=4)
+        self.grid(
+            row=row,
+            column=column,
+            rowspan=rowspan,
+            columnspan=columnspan,
+            sticky=sticky,
+            padx=8,
+            pady=4,
+        )
+        self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(1, weight=1)
+
+        # Important: your Text widget is on internal row 3, not row 1.
+        self.rowconfigure(3, weight=1)
 
         row = 0
-
-
-        ttk.Separator(self, orient="horizontal").grid(
-            row=row,
-            column=0,
-            columnspan=5,
-            sticky="ew",
-            padx=4,
-            pady=8,
-        )
-        row += 1
-
-        ttk.Label(self, text="Transcript Example").grid(
-            row=row,
-            column=0,
-            columnspan=5,
-            sticky="w",
-            padx=4,
-            pady=(4, 2),
-        )
-        row += 1
 
         ttk.Label(self, text="Transcript URLs:").grid(
             row=row,
@@ -124,7 +131,7 @@ class TranscriptSection(ttk.LabelFrame):
             command=self.run,
         ).grid(
             row=row,
-            column=4,
+            column=3,
             padx=4,
             pady=4,
             sticky="e",
@@ -189,7 +196,7 @@ class TranscriptSection(ttk.LabelFrame):
 
         example = TranscriptExample(
                                     mcp_client = client,
-                                    doc_dir_provider = self.ctx,
+                                    doc_dir_provider = self.info,
                                     emit=TkAfterOutputSink(self.root, self.output),
                                 )
 
@@ -215,9 +222,4 @@ class TranscriptSection(ttk.LabelFrame):
             Args:
                 error: The exception raised during the transcript example execution.
         """
-        self.output.write(f"Transcript failed: {error}")
-
-
-
-
-
+        self.output.line(f"Transcript failed: {error}")
