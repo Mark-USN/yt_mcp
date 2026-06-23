@@ -41,3 +41,4 @@ mcp.log
 *.pyproj.user
 .env
 *.exe
+yt_mcp.code-workspace

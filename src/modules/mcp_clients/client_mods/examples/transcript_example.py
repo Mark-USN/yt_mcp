@@ -64,6 +64,7 @@ class TranscriptExample:
         """
         self.mcp_client = mcp_client
         self.out_path = doc_dir_provider.documents_dir / "transcripts"
+        self.out_path.mkdir(parents=True, exist_ok=True)
         tv_cfg = TreeViewConfig()
         tv_cfg.collapse_keys={"env", "data"}
         tv_cfg.redact_keys={"token", "api_key"}
